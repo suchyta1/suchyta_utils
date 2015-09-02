@@ -60,31 +60,3 @@ def Gather(*args):
     else:
         return [gather(arg) for arg in args]
 
-
-
-class AutoMPI(object):
-
-    def __init__(self):
-        pass
-
-    def PreWork(self):
-        pass
-    
-    def Work(self):
-        pass
-
-    def PostWork(self):
-        pass
-
-    def Run(self):
-        if MPI.COMM_WORLD.Get_rank()==0:
-            self.PreWork()
-
-        scatters = Scatter(self.scatters)
-        broadcasts = Broadcast(self.broadcasts)
-        self.Work()
-
-        gathers = Gather(self.gathers)
-        if MPI.COMM_WORLD.Get_rank()==0:
-            self.PostWork()
-        
