@@ -7,6 +7,11 @@ There are "submodules" for different kinds of utilities:
 * `jk` -- Automatically generate (and save) jackknife realizations of an arbitrary function given data distributed on a sphere.
 
 
+<h1> Examples </h1>
+
+Refer to the (examples)[https://github.com/suchyta1/suchyta_utils/tree/master/examples] directory for usage help.
+
+
 <h1> Installation </h1>
 
 Installation follows the usual GitHub --> Python pattern.
