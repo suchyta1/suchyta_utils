@@ -1,4 +1,4 @@
-<h1> Contents <h1>
+<h1> Contents <\h1>
 
 `suchyta_utils` is an assortment of some Python tools written by Eric Suchyta in the course of working in DES.
 There are "submodules" for different kinds of utilities:
