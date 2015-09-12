@@ -1,0 +1,7 @@
+command: |
+   mpirun -npernode 4 -np 8 -hostfile %hostfile% ./MPI.py
+mode: bynode
+N: 2
+X: 1
+hostfile: auto
+job_name: mpi-test
