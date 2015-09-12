@@ -37,3 +37,8 @@ python setup.py install --user
 `suchyta_utils.jk`
 * [kmeans_radec](https://github.com/esheldon/kmeans_radec)
 * [numpy](http://www.numpy.org/)
+
+
+`suchtya_utils.db`
+*[desdb](https://github.com/esheldon/desdb)
+*[cx_Oracle](http://cx-oracle.sourceforge.net/)
