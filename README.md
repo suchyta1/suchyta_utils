@@ -9,7 +9,7 @@ There are "submodules" for different kinds of utilities:
 
 <h1> Examples </h1>
 
-Refer to the (examples)[https://github.com/suchyta1/suchyta_utils/tree/master/examples] directory for usage help.
+Refer to the [examples](https://github.com/suchyta1/suchyta_utils/tree/master/examples) directory for usage help.
 
 
 <h1> Installation </h1>
