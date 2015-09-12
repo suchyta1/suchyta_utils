@@ -19,7 +19,9 @@ def _gather(arr):
     
     if MPI.COMM_WORLD.Get_rank()==0:
         arr = np.array(arr)
-        if arr.ndim > 1:
+
+        if (arr.ndim > 1) | ((type(arr).__module__ == np.__name__) and (type(arr[0]).__module__ == np.__name__)):
+            dt = arr[0].dtype
             size = arr[0].ndim
             s = np.array(arr[0].shape)
             rs = None
@@ -28,7 +30,9 @@ def _gather(arr):
 
             for i in range(size):
                 arr = itertools.chain.from_iterable(arr)
-            arr = np.fromiter(arr, dtype=np.float)
+
+            #arr = np.fromiter(arr, dtype=np.float)
+            arr = np.fromiter(arr, dtype=dt)
             
             if rs is not None:
                 z = arr.shape[0] / np.prod(rs)

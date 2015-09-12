@@ -5,6 +5,8 @@ This file contains examples for the three MPI functions available from suchyta_u
     Scatter: distribute job across various CPUs
     Gather: collect data from various CPUs into a single entity
     Broadcast: send the same piece of data everywhere
+
+These functions are primarily intended for use with numpy arrays.
 """
 
 import suchyta_utils as es
@@ -36,6 +38,7 @@ if __name__ == "__main__":
 
 
     # 2D array being distributed to the various available processors, and then returned back
+    # Scattring/Gathering occurs along the 0th axis.
     if MPI.COMM_WORLD.Get_rank()==0:
         arr = np.arange(0, 9*MPI.COMM_WORLD.size)
         arr = np.reshape(arr, (arr.shape[0]/3, 3))
@@ -64,8 +67,29 @@ if __name__ == "__main__":
     else:
         r = None
     rr = es.mpi.Broadcast(r)
-    print 'rank = %i, common array ='%(MPI.COMM_WORLD.Get_rank()), rr
+    if MPI.COMM_WORLD.Get_rank() < 2:
+        print 'rank = %i, common array ='%(MPI.COMM_WORLD.Get_rank()), rr
 
 
     # You can use Broadcast with multiple arguments as well
     r1, r2 = es.mpi.Broadcast(r, r)
+
+
+
+    # These functions work on recarrays
+    MPI.COMM_WORLD.barrier()
+    if MPI.COMM_WORLD.Get_rank()==0:
+        x = np.arange(0, 50)
+        y = np.arange(50, 100)
+        a = np.zeros(50, dtype=[('x',np.int), ('y',np.int)])
+        a[:]['x'] = x
+        a[:]['y'] = y
+    else:
+        a = None
+    
+    a = es.mpi.Scatter(a)
+    for i in range(len(a)):
+        a[i]['x'] = 10*a[i]['x']
+    a = es.mpi.Gather(a)
+    if MPI.COMM_WORLD.Get_rank()==0:
+        print a['x']
