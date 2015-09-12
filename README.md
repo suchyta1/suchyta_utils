@@ -5,6 +5,7 @@ There are "submodules" for different kinds of utilities:
 
 * `mpi` -- Functions for wrapping and simplifying syntax for common MPI functionality to distribute/collect data during MPI jobs
 * `jk` -- Automatically generate (and save) jackknife realizations of an arbitrary function given data distributed on a sphere.
+* `db` -- Talking to your area of the DES DB (or that of other users)
 
 
 <h1> Examples </h1>
