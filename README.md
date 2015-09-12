@@ -1,4 +1,6 @@
 <h1> Installation </h1>
+
+Installation follows the usual GitHub-->python pattern.
 ```
 git clone https://github.com/suchyta1/suchyta_utils.git
 cd suchyta_utils/
