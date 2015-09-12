@@ -33,6 +33,10 @@ def _get_table_names():
 
 
 def get_my_tables(user=None):
+    """
+    Return all of a user's  tables from the DB.
+    Default user=None returns your own tables.
+    """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
         user = user.upper()
@@ -45,6 +49,9 @@ def get_my_tables(user=None):
     return tables
 
 def drop(tables):
+    """
+    Delete the tables in the list. You must own them.
+    """
     cur = _desdb.connect()
     for table in tables:
         print table
@@ -53,6 +60,10 @@ def drop(tables):
 
 
 def get_quota(user=None):
+    """
+    Return user's DB quota.
+    Default user=None returns your own quota.
+    """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
         user = user.upper()
@@ -60,7 +71,7 @@ def get_quota(user=None):
     cur = _desdb.connect()
     q = "SELECT USERNAME, TABLESPACE_NAME, MAX_BYTES from DBA_TS_QUOTAS WHERE USERNAME='%s'" %(user)
     all = cur.quick(q, array=True)
-    print all['max_bytes'][0] / _np.power(1024., 3), 'GB'
+    return all['max_bytes'][0] / _np.power(1024., 3), 'GB'
 
 
 def _add(tables, user='SUCHYTA1'):
@@ -83,6 +94,10 @@ def _add(tables, user='SUCHYTA1'):
     print count/_np.power(1024.0, 3), 'GB'
 
 def check_usage(user=None):
+    """
+    Print a summary of a user's DB usage
+    Default user=None prints your own usage
+    """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
         user = user.upper()
@@ -92,6 +107,14 @@ def check_usage(user=None):
 
 
 def search_tables(tables, key):
+    """
+    Search a list of tables for a string, and return any containing that string
+    Arguments:
+        tables: a list of table names
+        key: string to search for
+    Returns:
+        a list of the tables identified
+    """
     ts = []
     for name in tables:
         if name.find(key)!=-1:
@@ -140,6 +163,9 @@ def Combine(r1, r2, outr, bands=['G','R','I','Z','Y'], types=['TRUTH','NOSIM','S
 
 
 def IndexBalrog(db, dname, tab, what, name):
+    """
+    For indexing Balrog tables. Don't use this if you don't know what you're doing.
+    """
     cur = _desdb.connect()
 
     bands = ['det', 'g', 'r', 'i', 'z', 'y']
