@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+
+"""
+Some simple functions for use with user DBs in the DES DB.
+"""
+
 import suchyta_utils as es
 
 
