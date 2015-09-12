@@ -42,3 +42,4 @@ python setup.py install --user
 `suchtya_utils.db`
 * [desdb](https://github.com/esheldon/desdb)
 * [cx_Oracle](http://cx-oracle.sourceforge.net/)
+* [numpy](http://www.numpy.org/)
