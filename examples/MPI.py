@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+This file contains examples for the three MPI functions available from suchyta_utils:
+    Scatter: distribute job across various CPUs
+    Gather: collect data from various CPUs into a single entity
+    Broadcast: send the same piece of data everywhere
+"""
+
 import suchyta_utils as es
 from mpi4py import MPI
 
@@ -45,12 +52,20 @@ if __name__ == "__main__":
         print 'final array', arr
 
 
+    # You can also Scatter/Gather multiple things in one command if you want.
+    random, arr = es.mpi.Scatter(random, arr)
+    random, arr = es.mpi.Gather(random, arr)
+
+
 
     # 1D array being sent everywhere
     if MPI.COMM_WORLD.Get_rank()==0:
         r = np.random.randn(10)
     else:
         r = None
-    r = es.mpi.Broadcast(r)
-    print '\n\n'
-    print 'rank = %i, common array ='%(MPI.COMM_WORLD.Get_rank()), r
+    rr = es.mpi.Broadcast(r)
+    print 'rank = %i, common array ='%(MPI.COMM_WORLD.Get_rank()), rr
+
+
+    # You can use Broadcast with multiple arguments as well
+    r1, r2 = es.mpi.Broadcast(r, r)
