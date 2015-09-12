@@ -14,6 +14,11 @@ python setup.py install --user
 
 
 <h1> Requirements </h1>
-`.mpi` module
+
+`suchyta_utils.mpi`
 * mpi4py
+* numpy
+
+`suchyta_utils.jk`
+* [kmeans_radec](https://github.com/esheldon/kmeans_radec)
 * numpy
