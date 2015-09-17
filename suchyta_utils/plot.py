@@ -32,3 +32,26 @@ def _ReadStyle(file):
 def _SetStyle(style):                                                                                     
     for k,v in style.iteritems():                                                                        
         _mpl.rcParams[k]=v 
+
+
+def NTicks(ax, nxticks=None, nyticks=None):
+    if nyticks is not None:
+        ax.yaxis.set_major_locator( _mpl.ticker.MaxNLocator(nbins=(nyticks-1)) )
+        ax.yaxis.set_major_locator( _mpl.ticker.MaxNLocator(nbins=(nyticks-1)) )
+    if nxticks is not None:
+        ax.xaxis.set_major_locator( _mpl.ticker.MaxNLocator(nbins=(nxticks-1)) )
+        ax.xaxis.set_major_locator( _mpl.ticker.MaxNLocator(nbins=(nxticks-1)) )
+
+
+def OffsetX(r, offset=0, log=False):
+    if log:
+        newr = np.log10(r)
+    else:
+        newr = copy.copy(r)
+    
+    newr = newr + offset
+    if log:
+        newr = np.power(10, newr)
+
+    return newr
+
