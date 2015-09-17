@@ -2,7 +2,7 @@ import matplotlib as _mpl
 import os as _os
 
 def Setup():
-    dir = _os.path.dirname(os.path.realpath(__file__))
+    dir = _os.path.dirname(_os.path.realpath(__file__))
     style = _ReadStyle(_os.path.join(dir,'custom-sytle.mpl'))
     style = _SetStyle(style)
 
