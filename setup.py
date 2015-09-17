@@ -8,5 +8,5 @@ setup(name="suchyta_utils",
       author="Eric Suchyta",
       author_email="eric.d.suchyta@gmail.com",
       packages=['suchyta_utils'],
-      package_data={'plot':'custom-style.mpl'},
+      package_data={'plot':'custom-sytle.mpl'},
       include_package_data=True)
