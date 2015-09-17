@@ -49,9 +49,7 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
         map = mask
 
     nside = _hp.npix2nside(map.size)
-    _nsideExcept(nside)
-    r, d = _CatOrArrays(cat, ra, dec)
-    pix = RaDec2Healpix(r, d, nside, nest=nest)
+    pix = RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
     use = (map[pix]==1)
     if nocut:
         return use
