@@ -7,6 +7,6 @@ setup(name="suchyta_utils",
       license = "GPL",
       author="Eric Suchyta",
       author_email="eric.d.suchyta@gmail.com",
-      packages=['suchyta_utils'],
+      packages=find_packages(),
       package_data={'':['custom-sytle.mpl']},
       include_package_data=True)
