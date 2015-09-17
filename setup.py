@@ -1,4 +1,5 @@
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(name="suchyta_utils", 
       version="0.1.0",
@@ -6,4 +7,5 @@ setup(name="suchyta_utils",
       license = "GPL",
       author="Eric Suchyta",
       author_email="eric.d.suchyta@gmail.com",
-      packages=['suchyta_utils'])
+      packages=['suchyta_utils'],
+      package_data={'plot':'custom-style.mpl'})
