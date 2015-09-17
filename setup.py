@@ -1,5 +1,5 @@
-from distutils.core import setup
-#from setuptools import setup, find_packages
+#from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(name="suchyta_utils", 
       version="0.1.0",
