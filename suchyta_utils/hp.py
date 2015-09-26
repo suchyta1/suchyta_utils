@@ -31,19 +31,37 @@ def RaDec2Healpix(ra=None, dec=None, nside=None, nest=False, cat=None):
     return hpInd
 
 
+def _NestFromHeaderHP(mask, ext, nside=False):
+    nest = False
+    header = _pyfits.open(mask)[ext].header
+    try:
+        ordering = header['ORDERING']
+        if ordering.upper()=='NEST':
+            nest = True
+    except:
+        pass
+
+    if nside:
+        nside = header['NSIDE']
+        return nest, nside
+    else:
+        return nest
+
+def _BFromHeader(file, ext=-1, nest=None, nside=None):
+    if nest is None:
+        if nside is None:
+            nest, nside = _NestFromHeaderHP(file, ext, nside=True)
+        else:
+            nest = _NestFromHeaderHP(file, ext, nside=False)
+    return nest, nside
+
+
 def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocut=False):
     if ext is None:
         ext = -1
 
     if type(mask)==str:
-        try:
-            ordering = _pyfits.read(mask)[ext]
-            if ordering.upper()=='NEST':
-                nest = True
-            else:
-                nest = False
-        except:
-            pass
+        nest = _NestFromHeaderHP(mask, ext)
         map = _hp.read_map(mask, nest=nest)
     else:
         map = mask
@@ -58,3 +76,17 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
     else:
         return [r[use], d[use]]
 
+def GetBorisMap(file, ext=-1, nside=None, nest=None):
+    nest, nside = _BFromHeader(file, ext, nside=nside, nest=nest)
+    data = _pyfits.open(file)[ext].data
+    pix = data['PIXEL']
+    value = data['SIGNAL']
+    map = _np.zeros(_hp.nside2npix(nside))
+    map[:] = _hp.UNSEEN
+    map[pix] = value
+    return map, nest
+
+def RaDec2MapValue(map=None, nest=False, cat=None, ra=None, dec=None):
+    nside = _hp.npix2nside(map.size)
+    pix = RaDec2Healpix(ra=ra, dec=dec, nside=nside, nest=nest, cat=cat)
+    return map[pix]

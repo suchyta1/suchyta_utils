@@ -1,5 +1,7 @@
 import matplotlib as _mpl
+import matplotlib.pyplot as _plt
 import os as _os
+
 
 def Setup():
     dir = _os.path.dirname(_os.path.realpath(__file__))
@@ -55,3 +57,10 @@ def OffsetX(r, offset=0, log=False):
 
     return newr
 
+
+def LineSegment(ax=None, left=None, right=None, plotkwargs={}):
+    if ax is None:
+        fig, ax = _plt.subplots(1,1)
+
+    ax.plot( [left[0], right[0]], [left[1], right[1]], **plotkwargs )
+    return ax
