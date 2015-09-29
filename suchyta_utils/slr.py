@@ -19,7 +19,7 @@ class SLR:
             self.slrshift = _slr.SLRShift(self.slrfits, fill_periphery=True)
         elif release=='sva1':
             self.slrfits = _os.path.join(slrdir, 'slr_zeropoint_shiftmap_v6_splice_cosmos_griz_EQUATORIAL_NSIDE_256_RING.fits')
-            self.slrshift = _slr.SLRZeropintShiftmap(self.slrfits, fill_periphery=True)
+            self.slrshift = _slr.SLRZeropointShiftmap(self.slrfits, fill_periphery=True)
 
 
 
