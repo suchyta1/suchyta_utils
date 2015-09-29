@@ -17,7 +17,7 @@ class SLR:
         if release=='y1a1':
             self.slrfits = _os.path.join(slrdir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(area))
             self.slrshift = _slr.SLRShift(self.slrfits, fill_periphery=True)
-        elif release='sva1':
+        elif release=='sva1':
             self.slrfits = _os.path.join(slrdir, 'slr_zeropoint_shiftmap_v6_splice_cosmos_griz_EQUATORIAL_NSIDE_256_RING.fits'
             self.slrshift = _slr.SLRZeropintShift(self.slrfits, fill_periphery=True)
 
