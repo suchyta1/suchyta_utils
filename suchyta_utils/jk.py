@@ -38,7 +38,7 @@ def JKSphere(jarrs, jras, jdecs, jfunc, jargs=[], jkwargs={}, jtype='generate', 
     to get a better feel for what the arguments/returns mean. Once you understand it, you can
     get a lot of mileage out of this function.
     """
-    jarrs, jras, jdec = _jk.ArrFunc(EnforceArray2D, jarrs, jras, jdecs)
+    jarrs, jras, jdec = _jk.ArrFunc(_jk.EnforceArray2D, jarrs, jras, jdecs)
     km, jfile = _jk.GenerateRegions(jarrs, jras, jdecs, jfile, njack, gindex, jtype)
     if generateonly:
         return jfile
