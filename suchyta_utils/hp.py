@@ -76,6 +76,12 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
     else:
         return [r[use], d[use]]
 
+def GetHPMap(mask):
+    nest = _NestFromHeaderHP(mask, -1)
+    map = _hp.read_map(mask, nest=nest)
+    return map, nest
+
+
 def GetBorisMap(file, ext=-1, nside=None, nest=None):
     nest, nside = _BFromHeader(file, ext, nside=nside, nest=nest)
     data = _pyfits.open(file)[ext].data
