@@ -7,7 +7,13 @@ def Completeness(sim=None, truth=None, bins=None):
     for i in range(len(bins)-1):
         scut = (sim > bins[i]) & (sim < bins[i+1])
         tcut = (truth > bins[i]) & (truth < bins[i+1])
-        c[i] = float(_np.sum(scut)) / _np.sum(tcut)
+        den = _np.sum(tcut)
+
+        if den > 0:
+            c[i] = float(_np.sum(scut)) / den
+        else:
+            c[i] = _np.nan
+
     return c
 
 
