@@ -91,13 +91,19 @@ def _lon2RA(lon):
 
 
 # The Basemap stuff seems to get confused if you try to put more than one axis on a plot.
-def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[2000000,2200000], vmin=None, vmax=None ):
+def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None ):
     if ax is None:
         fig, ax = _plt.subplots(1,1)
 
     if fig is None:
         fig, ax = plt.subplots(1,1, figsize=(6.5*nside/512,6*nside/512))
-    m = _Basemap(projection='aea', width=dims[0], height=dims[1], lat_0=-52.5, lat_1=-61, lat_2=-42., lon_0=-75., ax=ax)
+
+    r = 6.371e6
+    h = r * _np.radians(dims[1])
+    w = r * _np.cos(_np.radians(center[1])) * _np.radians(dims[0])
+
+    #m = _Basemap(projection='aea', width=dims[0], height=dims[1], lat_0=lat_0, lat_1=-61, lat_2=-42., lon_0=-75., ax=ax)
+    m = _Basemap(projection='aea', width=w, height=h, lat_0=center[1], lon_0=center[0], ax=ax)
 
     bc, lat, lon = _getCountLocation(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
     x,y  = m(-lon, lat)
@@ -106,7 +112,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
         vmin = _np.amin(bc)
     if vmax is None:
         vmax = _np.amax(bc)
-    sc = m.scatter(x,y,c=bc, linewidths=0, s=9, marker='s', vmin=vmin, vmax=vmax, rasterized=True, cmap=_cm.YlOrRd)
+    sc = m.scatter(x,y,c=bc, linewidths=0, s=9, marker='s', vmin=vmin, vmax=vmax, rasterized=True, cmap=_cm.YlOrRd, ax=ax)
 
     #ax.text(0.05, 0.95, 'Stars', ha='left', va='top', transform=ax.transAxes)
 
