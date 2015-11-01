@@ -21,6 +21,14 @@ def _CatOrArrays(cat, ra, dec):
     return r, d
 
 
+def Healpix2RaDec(pixels, nside=None, nest=False):
+    _nsideExcept(nside)
+    theta, phi = _hp.pix2ang(nside, pixels, nest=nest)
+    dec = 90.0 - _np.degrees(theta)
+    ra = _np.degrees(phi)
+    return [ra, dec]
+
+
 def RaDec2Healpix(ra=None, dec=None, nside=None, nest=False, cat=None):
     _nsideExcept(nside)
     r, d = _CatOrArrays(cat, ra, dec)
@@ -74,7 +82,7 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
     elif cat is not None:
         return cat[use]
     else:
-        return [r[use], d[use]]
+        return [ra[use], dec[use]]
 
 def GetHPMap(mask):
     nest = _NestFromHeaderHP(mask, -1)
