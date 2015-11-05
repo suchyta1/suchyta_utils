@@ -12,7 +12,7 @@ text.usetex         : True
 text.latex.preamble : \usepackage{txfonts}
 
  
-#axes & ticks
+axes & ticks
 axes.edgecolor      : black
 axes.facecolor      : white
 axes.linewidth      : 1.0  

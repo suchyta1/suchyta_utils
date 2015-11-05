@@ -1,6 +1,5 @@
 import sys
 import itertools
-
 import numpy as np
 from mpi4py import MPI
 

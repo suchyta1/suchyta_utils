@@ -5,7 +5,9 @@ from . import hp
 from . import slr
 from . import balrog
 
+'''
 try:
     from . import mpi
 except:
     pass
+'''
