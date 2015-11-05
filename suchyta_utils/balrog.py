@@ -2,6 +2,21 @@ import numpy as _np
 import esutil as _es
 
 
+def BinnedAvg(cat=None, bins=None, binon=None, avgon=None, kind='avg'):
+    a = _np.zeros(len(bins)-1)
+    for i in range(len(bins)-1):
+        cut =  (cat[binon] > bins[i]) & (cat[binon] < bins[i+1])
+        if _np.sum(cut) > 0:
+            if kind=='avg':
+                avg = _np.average(cat[cut][avgon])
+            elif kind=='median':
+                avg = _np.median(cat[cut][avgon])
+            a[i] = avg
+        else:
+            a[i] = _np.nan
+    return a
+
+
 def Completeness(sim=None, truth=None, bins=None):
     c = _np.zeros(len(bins)-1)
     for i in range(len(bins)-1):

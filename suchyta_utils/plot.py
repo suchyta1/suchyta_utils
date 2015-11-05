@@ -91,12 +91,12 @@ def _lon2RA(lon):
 
 
 # The Basemap stuff seems to get confused if you try to put more than one axis on a plot.
-def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None ):
-    if ax is None:
-        fig, ax = _plt.subplots(1,1)
+def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$' ):
 
     if fig is None:
         fig, ax = plt.subplots(1,1, figsize=(6.5*nside/512,6*nside/512))
+    if ax is None:
+        fig, ax = _plt.subplots(1,1)
 
     r = 6.371e6
     h = r * _np.radians(dims[1])
@@ -127,7 +127,8 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     #ax.text(x,y, r'$\delta = -58^\circ$', color='#444444', ha='left', va='bottom', size=14, rotation=11)
 
     cb = m.colorbar(sc,"right", size="3%", pad='0%')
-    cb.set_label('$n_s\ [\mathrm{arcmin}^{-2}]$')
+    if clabel is not None:
+        cb.set_label(clabel)
     cb.set_ticklabels(_np.linspace(vmin, vmax, (vmax - vmin)/1 + 1, dtype='int32'))
     cb.solids.set_edgecolor("face")
 
