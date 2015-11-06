@@ -1,5 +1,6 @@
 import numpy as _np
 import esutil as _es
+import copy as _copy
 
 
 def BinnedAvg(cat=None, bins=None, binon=None, avgon=None, kind='avg'):
@@ -56,6 +57,19 @@ def RemoveNosim(m, nosim, version=None, id='balrog_index'):
     else:
         matched = _nnmatch(matched, nosim, id, version)
     return matched
+
+def AddModestNeed(keys, release='sva1'):
+    k = _copy.copy(keys)
+    if release=='sva1':
+        extra = ['flags_i', 'class_star_i', 'mag_auto_i', 'spread_model_i', 'spreaderr_model_i', 'mag_psf_i']
+    elif release=='y1a1':
+        extra = ['spread_model_i', 'spreaderr_model_i']
+
+    for e in extra:
+        if e not in keys:
+            k.append(e)
+
+    return k
 
 
 def Modest(data, release='sva1'):
