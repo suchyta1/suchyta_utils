@@ -70,7 +70,7 @@ def _BFromHeader(file, ext=-1, nest=None, nside=None):
     return nest, nside
 
 
-def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocut=False):
+def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocut=False, val=1, cond='='):
     if ext is None:
         ext = -1
 
@@ -82,7 +82,18 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
 
     nside = _hp.npix2nside(map.size)
     pix = RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
-    use = (map[pix]==1)
+
+    if cond=='=':
+        use = (map[pix]==val)
+    elif cond=='<':
+        use = (map[pix] < val)
+    elif cond=='<=':
+        use = (map[pix] <= val)
+    elif cond=='>':
+        use = (map[pix] > val)
+    elif cond=='>=':
+        use = (map[pix] >= val)
+    
     if nocut:
         return use
     elif cat is not None:
