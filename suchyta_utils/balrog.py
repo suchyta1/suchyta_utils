@@ -56,3 +56,32 @@ def RemoveNosim(m, nosim, version=None, id='balrog_index'):
     else:
         matched = _nnmatch(matched, nosim, id, version)
     return matched
+
+
+def Modest(data, release='sva1'):
+    modest = _np.zeros(len(data), dtype=_np.int32)
+
+    if release=='sva1':
+        galcut = (data['flags_i'] <=3) & -( ((data['class_star_i'] > 0.3) & (data['mag_auto_i'] < 18.0)) | ((data['spread_model_i'] + 3*data['spreaderr_model_i']) < 0.003) | ((data['mag_psf_i'] > 30.0) & (data['mag_auto_i'] < 21.0)))
+        modest[galcut] = 1
+
+        starcut = (data['flags_i'] <=3) & ((data['class_star_i'] > 0.3) & (data['mag_auto_i'] < 18.0) & (data['mag_psf_i'] < 30.0) | (((data['spread_model_i'] + 3*data['spreaderr_model_i']) < 0.003) & ((data['spread_model_i'] +3*data['spreaderr_model_i']) > -0.003)))
+        modest[starcut] = 2
+
+        neither = -(galcut | starcut)
+        modest[neither] = 3
+
+    elif release=='y1a1':
+        ncut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] < -0.002)
+        modest[ncut] = 0
+
+        starcut = (_np.fabs(data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i']) < 0.002)
+        modest[starcut] = 2
+
+        galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.005) #& (-(abs(data['wavg_spread_model_i']) < 0.002 and MAG_AUTO_I < 21.5) then 1)
+        modest[galcut] = 1
+
+        nncut = -(galcut | starcut | ncut)
+        modest[nncut] = 3
+
+    return modest
