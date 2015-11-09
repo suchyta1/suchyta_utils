@@ -1,3 +1,8 @@
+<h1> Documentation </h1>
+
+Refer to the Sphinx documenation [here](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/).
+I am working to keep it up to date.
+
 <h1> Contents </h1>
 
 `suchyta_utils` is an assortment of some Python tools written by Eric Suchyta in the course of working in DES.
