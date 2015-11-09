@@ -22,7 +22,7 @@ def _CatOrArrays(cat, ra, dec):
 
 
 def GetArea(cat=None, ra=None, dec=None, nside=4096, nest=False):
-    hps = RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside)
+    hps = RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
     uhps = _np.unique(hps)
     area = len(uhps) * _hp.nside2pixarea(nside, degrees=True)
     return area
