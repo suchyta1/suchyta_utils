@@ -73,6 +73,19 @@ def AddModestNeed(keys, release='sva1'):
 
 
 def Modest(data, release='sva1'):
+    """
+    Find the modest class classifications for the data. The array must have all the required fields or you'll get an error.
+
+    * ``data``: Equivalent to a numpy recarray
+    * ``release``: Allowed values ['sva1', 'y1a1']
+
+    .. warning::
+        Currently, the Balrog setup is not able to completely recreate the modest classification for Y1A1.
+        It depends on `wavg_spread_model_i`, a weighted average of the i-band single-epoch `spread_model` measurements.
+        Balrog is only running on the coadd images for now.
+
+    """
+
     modest = _np.zeros(len(data), dtype=_np.int32)
 
     if release=='sva1':

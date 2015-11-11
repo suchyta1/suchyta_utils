@@ -73,6 +73,16 @@ if __name__ == "__main__":
         shift = sv_slr.GetMagShifts(band, sv_data['alphawin_j2000_i'], sv_data['deltawin_j2000_i'])
         sv_data['mag_auto_{0}'.format(band)] = sv_data['mag_auto_{0}'.format(band)] + shift
 
+
+    # Find modest class for all objects 
+    # See the caveat about Y1A1 version (http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/doc/html/balrog.html#suchyta_utils.balrog.Modest)
+    sv_modest = es.balrog.Modest(sv_data, release='sva1')
+    y1_modest = es.balrog.Modest(y1_data, release='y1a1')
+
+    sv_stars = sv_data[ sv_modest==2 ]
+    y1_stars = y1_data[ y1_modest==2 ]
+
+
     # Plot the magnitude distributions
     rows = 2
     cols = int(np.ceil(float(len(y1_bands))/rows))
@@ -85,9 +95,9 @@ if __name__ == "__main__":
         jj = i % cols
         ax = axarr[ii][jj]
 
-        h, b = np.histogram(y1_data['mag_auto_{0}'.format(y1_bands[i])], bins=bins, density=True)
+        h, b = np.histogram(y1_stars['mag_auto_{0}'.format(y1_bands[i])], bins=bins, density=True)
         ax.plot(c, np.log10(h), color='blue', label='Y1')
-        h, b = np.histogram(sv_data['mag_auto_{0}'.format(y1_bands[i])], bins=bins, density=True)
+        h, b = np.histogram(sv_stars['mag_auto_{0}'.format(y1_bands[i])], bins=bins, density=True)
         ax.plot(c, np.log10(h), color='red', label='SV')
         ax.set_xlabel(r'\texttt{MAG\_AUTO\_%s}'%(y1_bands[i].upper()))
         ax.set_ylabel(r'$\log_{10}(p)$')
@@ -96,5 +106,8 @@ if __name__ == "__main__":
         es.plot.NTicks(ax, nxticks=6, nyticks=8)
         if i==0:
             ax.legend(loc='best')
+
+
+    
 
     plt.show()
