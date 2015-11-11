@@ -227,14 +227,14 @@ def ApplyMask(ra=None, dec=None, mask=None, nest=False, cat=None, nocut=False, v
     else:
         return [ra[use], dec[use]]
 
-def GetHPMap(mask):
+def GetHPMap(file):
     """
-    Read a HEALPix mask file in FITS (.fz) format,
-    This function calls ``healpy.read_map(mask, nest=nest)``, automatically populating `nest` by reading the image header.
+    Read a HEALPix map file in FITS (.fz) format,
+    This function calls ``healpy.read_map(file, nest=nest)``, automatically populating `nest` by reading the image header.
 
     Parameters
     ----------
-    mask (str)
+    file (str)
         Filename of the map
 
     Returns
@@ -245,8 +245,8 @@ def GetHPMap(mask):
         Whether or not the map is in nested format
 
     """
-    nest = _NestFromHeaderHP(mask, -1)
-    map = _hp.read_map(mask, nest=nest)
+    nest = _NestFromHeaderHP(file, -1)
+    map = _hp.read_map(file, nest=nest)
     return map, nest
 
 
@@ -286,6 +286,8 @@ def RaDec2MapValue(map=None, nest=False, cat=None, ra=None, dec=None):
   
     Parameters
     ----------
+    map (structured array)
+        The HEALPix map 
     cat (None/structured array)
         If not None, the structured data array (e.g. numpy recarray)
     ra (float array/str)
@@ -301,6 +303,13 @@ def RaDec2MapValue(map=None, nest=False, cat=None, ra=None, dec=None):
         Array of the map values for each entry
 
     """
-    nside = _hp.npix2nside(map.size)
+
+    if type(map)==str:
+        nest = _NestFromHeaderHP(map, -1)
+        mask = _hp.read_map(map, nest=nest)
+    else:
+        mask = map
+
+    nside = _hp.npix2nside(mask.size)
     pix = RaDec2Healpix(ra=ra, dec=dec, nside=nside, nest=nest, cat=cat)
-    return map[pix]
+    return mask[pix]
