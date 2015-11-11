@@ -1,27 +1,9 @@
 """
-The :mod:`hp` module is for working with HEALPix maps in python.
+The :mod:`hp` submodule is for working with HEALPix maps in python.
 Most of the functions are things I commonly do which make healpy calls underneath.
+The functions are generally designed to be able to intuitively handle either objects which amount to recarrays
+or seperate RA/DEC arrays.
     
-Examples:
-::
-    
-    # Apply the Y1A1 footprint and 4% exclusion mask to Y1 DES and Balrog data
-    sim_y1 = esutil.io.read('sim-y1.fits')
-    des_y1 = esutil.io.read('des-y1.fits')
-    y1fmask, y1fnest = es.hp.GetHPMap('sva1_gold_1.0.4_goodregions_04_equ_ring_4096.fits.gz')
-    y1mask, y1nest = es.hp.GetHPMap('y1a1_gold_1.0.1_wide+d04_badmask_4096.fit.gz')
-    sim_y1 = es.hp.ApplyMask(mask=y1fmask, nest=y1fnest, cat=sim_y1, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='=')
-    des_y1 = es.hp.ApplyMask(mask=y1fmask, nest=y1fnest, cat=des_y1, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='=')
-    sim_y1 = es.hp.ApplyMask(mask=y1mask, nest=y1nest, cat=sim_y1, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=0, cond='=')
-    des_y1 = es.hp.ApplyMask(mask=y1mask, nest=y1nest, cat=des_y1, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=0, cond='=')
-
-    # Apply the SVA1 4% exclusion mask to SVA1 DES and Balrog data
-    sim_sv = esutil.io.read('sim-sv.fits')
-    des_sv = esutil.io.read('des_sv.fits')
-    svmask, svnest = es.hp.GetHPMap('sva1_gold_1.0.4_goodregions_04_equ_ring_4096.fits.gz')
-    sim_sv = es.hp.ApplyMask(mask=svmask, nest=svnest, cat=sim_sv, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='=')
-    des_sv = es.hp.ApplyMask(mask=svmask, nest=svnest, cat=des_sv, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='=')
-
 """
 
 import numpy as _np
@@ -47,31 +29,52 @@ def _CatOrArrays(cat, ra, dec):
     return r, d
 
 
-def GetArea(cat=None, ra=None, dec=None, nside=4096, nest=False):
+def GetArea(cat=None, ra=None, dec=None, nside=4096):
     """
-    Return the area covered by the dataset, in square degrees.
-    The function checks if any objects are each HEALPixel, then adds up how many pixels were found, and multiplies by the pixel area.
-   
-    * ``cat``: if not None, equivalent to a numpy recarray
-    * ``ra``: if `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`
-    * ``dec``: if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`
-    * ``nside``: HEALPix nside; determines the pixel size used in the computation
-    * ``nest``: whether or not to use nested format, though this parameter is irrelevant (I just allow it for completeness)
+    Compute the area covered by the dataset, in square degrees.
+    The function checks if any objects are each in HEALPixel, then adds up how many pixels were found, and multiplies by the pixel area.
+
+    Parameters
+    ----------
+    cat (None/structured array)
+        If not None, the structured data array (e.g. numpy recarray)
+    ra (float array/str)
+        If `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`.
+    dec (float array/str)
+        if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`.
+    nside (int)
+        HEALPix nside, which determines the pixel size used in the computation
+
+    Returns
+    -------
+    area (float)
+        The area covered by the dataset (in square degrees).
 
     """
-    hps = RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
+    hps = RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=False)
     uhps = _np.unique(hps)
     area = len(uhps) * _hp.nside2pixarea(nside, degrees=True)
     return area
 
 def Healpix2RaDec(pixels, nside=None, nest=False):
     """
-    Return the RA/DEC for each HEALPixel index in `pixels`. A 2D list is returned. 
-    Element 0 is the RA array, and Element 1 is the DEC array.
-   
-    * ``pixels``: Array of the pixel integers 
-    * ``nside``: HEALPix nside
-    * ``nest``: whether or not to use nested format
+    Compute the RA/DEC for each HEALPixel index in `pixels`.
+  
+    Parameters
+    ----------
+    pixels (int array)
+        Array of the pixel integers 
+    nside (int)
+        HEALPix nside
+    nest (bool)
+        Whether or not to use nested format
+
+    Returns
+    -------
+    ra (float array)
+        The RA coordinates of the entries (in degrees)
+    dec (float array)
+        The DEC coordinates of the entries (in degrees)
 
     """
     _nsideExcept(nside)
@@ -83,13 +86,20 @@ def Healpix2RaDec(pixels, nside=None, nest=False):
 
 def RaDec2Healpix(ra=None, dec=None, nside=None, nest=False, cat=None):
     """
-    Return the HEALPix index for each RA/DEC. Numpy array is returned. 
-   
-    * ``cat``: if not None, equivalent to a numpy recarray
-    * ``ra``: if `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`
-    * ``dec``: if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`
-    * ``nside``: HEALPix nside
-    * ``nest``: whether or not to use nested format
+    Compute the HEALPix index for each RA/DEC pair. Numpy array is returned. 
+  
+    Parameters
+    ----------
+    cat (None/structured array)
+        If not None, the structured data array (e.g. numpy recarray)
+    ra (float array/str) 
+        if `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`.
+    dec (float array/str)
+        if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`.
+    nside (int)
+        HEALPix nside
+    nest (bool)
+        Whether or not to use nested format
 
     """
     _nsideExcept(nside)
@@ -126,28 +136,72 @@ def _BFromHeader(file, ext=-1, nest=None, nside=None):
     return nest, nside
 
 
-def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocut=False, val=1, cond='='):
+def ApplyMask(ra=None, dec=None, mask=None, nest=False, cat=None, nocut=False, val=1, cond='='):
     """
     Apply a HEALPix mask. 
 
-    * ``mask``: filename or an array (such as the first element returned by :func:`~suchyta_utils.hp.GetHPMap`).
-      If you're going to be applying the same mask repeated times, it's faster to use the array so you don't have to read the file multiple times.
-    * ``cat``: if not None, equivalent to a numpy recarray
-    * ``ext``: Only relevant for `mask` which is a filename. Extension in the file where the map lives. None is equivalent to -1, the final extension.
-    * ``ra``: if `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`
-    * ``dec``: if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`
-    * ``nest``: whether or not to use nested format. If `mask` is a file name, the `nest` keyword is irrelevant (because it is automatically determined from the header).
-    * ``nocut``: If True, do not apply the map to the data, and instead return the array of Booleans if the entry should be kept or not.
-    * ``cond``: How the cut is to be applied. Possible values: ``=``, ``<``, ``<=``, ``>``, ``>=``
-    * ``val``: The value on the right side of `cond`.
+    Parameters
+    ----------
+    mask (array/str) 
+        Either a filename or the mask as an array (such as the first element returned by :func:`~suchyta_utils.hp.GetHPMap`).
+        If you're going to be applying the same mask repeated times, it's faster to use the array so you don't have to read the file multiple times.
+    cat (None/stuctured array)  
+        If not None, the structured data array (e.g. numpy recarray)
+    ra (float array/str)
+        If `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`.
+    dec (float array/str)
+        If `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`.
+    nest (bool)
+        whether or not to use nested format. If `mask` is a file name, the `nest` keyword is irrelevant (because it is automatically determined from the header).
+    nocut (bool)
+        If True, do not apply the map to the data, and instead return the array of booleans if the entry should be kept or not.
+    cond (str)
+        How the cut is to be applied. Possible values: ``=``, ``<``, ``<=``, ``>``, ``>=``
+    val (float)
+        The value on the right side of `cond`.
+
+    Returns
+    -------
+    rdata (bool array/structured array/[RA, DEC])
+        | Three possibilities exist for how the output is returned:
+        | 1) ``if nocut``, return a numpy array of booleans for which entries should be kept; i.e. the new catalog would be ``cat = cat[rdata]``
+        | 2) ``if (cat is not None) and (not nocut)``, the portion of `cat` which survives the masking is returned
+        | 3) ``if (cat is None) and (not nocut)``, return a 2D list of the [RA, DEC] that survive the masking.
+
+    
+    Examples
+    --------
+    Here's a snippet from the `git repository's example.py <https://github.com/suchyta1/suchyta_utils/blob/master/examples/example.py>`_::
+
+        # Put all the supplementary DES files in some directory
+        supdir = './supplementary'
+    
+        # Y1 files
+        y1_data_file = os.path.join(supdir, 'balrog-small-y1.fits')
+        y1_footprint_file = os.path.join(supdir, 'y1a1_gold_1.0.1_wide+d04_footprint_4096.fit.gz')
+        y1_badmask_file = os.path.join(supdir, 'y1a1_gold_1.0.1_wide+d04_badmask_4096.fit.gz')
+
+        # Apply the Y1A1 footprint and 4% exclusion mask to the Balrog data. 
+        # Do everything with objects, not file names. This is always at least as fast as all filen names. (Particularly if one uses things multiple times.)
+        y1_data = esutil.io.read(y1_data_file)
+        y1_footprint, y1_footprint_nest = es.hp.GetHPMap(y1_footprint_file)
+        y1_data = es.hp.ApplyMask(mask=y1_footprint, nest=y1_footprint_nest, cat=y1_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='>=')
+        y1_badmask, y1_badmask_nest = es.hp.GetHPMap(y1_badmask_file)
+        y1_data = es.hp.ApplyMask(mask=y1_badmask, nest=y1_badmask_nest, cat=y1_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=0, cond='=')
+    
+        # SV files
+        sv_data_file = os.path.join(supdir, 'balrog-small-sv.fits')
+        sv_goodmask_file = os.path.join(supdir, 'sva1_gold_1.0.4_goodregions_04_equ_ring_4096.fits.gz')
+
+        # Apply the SVA1 4% exclusion mask to the Balrog data. Do everything with file names.
+        sv_data = esutil.io.read(sv_data_file)
+        sv_ra, sv_dec = es.hp.ApplyMask(mask=sv_goodmask_file, ra=sv_data['alphawin_j2000_i'], dec=sv_data['deltawin_j2000_i'], val=1, cond='=')
 
 
     """
-    if ext is None:
-        ext = -1
 
     if type(mask)==str:
-        nest = _NestFromHeaderHP(mask, ext)
+        nest = _NestFromHeaderHP(mask, -1)
         map = _hp.read_map(mask, nest=nest)
     else:
         map = mask
@@ -175,11 +229,20 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
 
 def GetHPMap(mask):
     """
-    Read and return a HEALPix mask file in FITS (.fz) format,
-    returning a 2D tuple: (map [i.e. an array], nest)
+    Read a HEALPix mask file in FITS (.fz) format,
     This function calls ``healpy.read_map(mask, nest=nest)``, automatically populating `nest` by reading the image header.
 
-    * ``mask``: filename
+    Parameters
+    ----------
+    mask (str)
+        Filename of the map
+
+    Returns
+    -------
+    map (array)
+        The HEALPix map. This amounts to an array, ordered by the HEALPix index.
+    nest (bool)
+        Whether or not the map is in nested format
 
     """
     nest = _NestFromHeaderHP(mask, -1)
@@ -187,16 +250,27 @@ def GetHPMap(mask):
     return map, nest
 
 
-def GetBorisMap(file, ext=-1, nside=None, nest=None):
+def GetBorisMap(file):
     """
-    Read one of Boris Leistedt's maps and return it as a HEALPix map, returning a 2D tuple: (map [i.e. an array], nest)
+    Read one of Boris Leistedt's maps and convert it to a HEALPix map.
 
-    * ``file``: Filename of the map
-    * ``ext``: Extension of the file which the map lives in.
-    * ``nside``: None means read from header. I would only use None.
-    * ``nest``: None means read from header. I would only use None.
+    Parameters
+    ----------
+    file (str)
+        Filename of the map
+
+    Returns
+    -------
+    map (array)
+        The HEALPix map. This amounts to an array, ordered by the HEALPix index.
+    nest (bool)
+        Whether or not the map is in nested format
 
     """
+    ext = -1
+    nside = None
+    nest = None
+
     nest, nside = _BFromHeader(file, ext, nside=nside, nest=nest)
     data = _pyfits.open(file)[ext].data
     pix = data['PIXEL']
@@ -208,12 +282,23 @@ def GetBorisMap(file, ext=-1, nside=None, nest=None):
 
 def RaDec2MapValue(map=None, nest=False, cat=None, ra=None, dec=None):
     """
-    Return the value of a map for each entry in the catalog. Numpy array is returned. 
-   
-    * ``cat``: if not None, equivalent to a numpy recarray
-    * ``ra``: if `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`
-    * ``dec``: if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`
-    * ``nest``: whether or not the map is in nested format
+    Find the value of a map for each entry in the catalog.
+  
+    Parameters
+    ----------
+    cat (None/structured array)
+        If not None, the structured data array (e.g. numpy recarray)
+    ra (float array/str)
+        If `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`.
+    dec (float array/str)
+        if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`.
+    nest (bool)
+        Whether or not to use nested format.
+
+    Returns
+    -------
+    vals (array)
+        Array of the map values for each entry
 
     """
     nside = _hp.npix2nside(map.size)

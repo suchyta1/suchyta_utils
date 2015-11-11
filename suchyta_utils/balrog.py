@@ -51,6 +51,20 @@ def _nnmatch(matched, nosim, id, version):
 
 
 def RemoveNosim(m, nosim, version=None, id='balrog_index'):
+    """
+    Do some stuff
+
+    Parameters
+    ----------
+    m: catalog
+        Something
+
+    Returns
+    -------
+    thing: some type
+        Explain
+
+    """
     matched = _np.copy(m)
     if version is None:
         matched = _nmatch(matched, nosim, id)

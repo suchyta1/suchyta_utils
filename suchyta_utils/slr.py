@@ -1,3 +1,8 @@
+"""
+The :mod:`slr` 
+
+"""
+
 import os as _os
 import imp as _imp
 import numpy as _np

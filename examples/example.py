@@ -106,8 +106,5 @@ if __name__ == "__main__":
         es.plot.NTicks(ax, nxticks=6, nyticks=8)
         if i==0:
             ax.legend(loc='best')
-
-
     
-
     plt.show()
