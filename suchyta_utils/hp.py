@@ -136,7 +136,7 @@ def ApplyMask(ra=None, dec=None, mask=None, ext=None, nest=False, cat=None, nocu
     * ``ext``: Only relevant for `mask` which is a filename. Extension in the file where the map lives. None is equivalent to -1, the final extension.
     * ``ra``: if `cat` is None, an array of the RA values. Otherwise, the column name for the RA column in `cat`
     * ``dec``: if `cat` is None, an array of the DEC values. Otherwise, the column name for the DEC column in `cat`
-    * ``nest``: whether or not to use nested format
+    * ``nest``: whether or not to use nested format. If `mask` is a file name, the `nest` keyword is irrelevant (because it is automatically determined from the header).
     * ``nocut``: If True, do not apply the map to the data, and instead return the array of Booleans if the entry should be kept or not.
     * ``cond``: How the cut is to be applied. Possible values: ``=``, ``<``, ``<=``, ``>``, ``>=``
     * ``val``: The value on the right side of `cond`.

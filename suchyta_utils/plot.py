@@ -81,6 +81,12 @@ def _getCountLocation(cat=None, ra=None, dec=None, nside=512, nest=False):
     return bc, lat, lon
 
 
+def _Lon2RA(lon):
+    h = lon / 360.0 * 24.0
+    hh = int(h)
+    m = _np.round( (h-hh)*60 )
+    return "%d:%02dh" % (h,m)
+
 def _lon2RA(lon):
     # reverse direction
     lon = 360 - lon
@@ -91,7 +97,7 @@ def _lon2RA(lon):
 
 
 # The Basemap stuff seems to get confused if you try to put more than one axis on a plot.
-def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$' ):
+def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0 ):
 
     if fig is None:
         fig, ax = plt.subplots(1,1, figsize=(6.5*nside/512,6*nside/512))
@@ -106,7 +112,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     m = _Basemap(projection='aea', width=w, height=h, lat_0=center[1], lon_0=center[0], ax=ax)
 
     bc, lat, lon = _getCountLocation(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
-    x,y  = m(-lon, lat)
+    x,y  = m(lon, lat)
 
     if vmin is None:
         vmin = _np.amin(bc)
@@ -118,13 +124,24 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
 
     # draw parallels and meridians.
     # label on left and bottom of map.
-    m.drawparallels(parallels,labels=[1,0,0,0], labelstyle="+/-", linewidth=0.5)
-    m.drawmeridians(meridians,labels=[0,0,0,1], fmt=_lon2RA, linewidth=0.5)
+    #m.drawparallels(parallels,labels=[0,1,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(2)))
 
     # declination cut
     #m.drawparallels([-58],labels=[0,0,0,0], color='#444444', dashes=[1,0], linewidth=1)
     #x,y = m(-91.5, -57.8)
     #ax.text(x,y, r'$\delta = -58^\circ$', color='#444444', ha='left', va='bottom', size=14, rotation=11)
+
+    if rafmt=='h':
+        m.drawmeridians(meridians,labels=[0,0,0,1], fmt=_Lon2RA, linewidth=0.5)
+    elif rafmt=='d':
+        m.drawmeridians(meridians,labels=[0,0,0,1], linewidth=0.5)
+
+    if raflip:
+        m.drawparallels(parallels,labels=[0,1,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(xoffset)))
+        ax.invert_xaxis()
+    else:
+        m.drawparallels(parallels,labels=[1,0,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(xoffset)))
+
 
     cb = m.colorbar(sc,"right", size="3%", pad='0%')
     if clabel is not None:

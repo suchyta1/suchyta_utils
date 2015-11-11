@@ -1,6 +1,6 @@
 <h1> Documentation </h1>
 
-Refer to the Sphinx documenation [here](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/).
+Refer to the Sphinx documenation [here](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/doc/html/).
 I am working to keep it up to date.
 
 <h1> Contents </h1>

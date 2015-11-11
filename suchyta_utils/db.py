@@ -1,29 +1,12 @@
+"""
+Test Stuff
+
+"""
+
 import _dbfunctions
 import desdb as _desdb
 import numpy as _np
 
-
-"""
-def print_table_cols(table):
-    cur = _dbfunctions.get_cursor()
-    cur.execute("select * from %s" %table)
-    tab = _np.array( cur.description )[:,0] 
-    for t in tab:
-        print t
-
-
-def get_table_cols(table):
-    cur = _dbfunctions.get_cursor()
-    cur.execute("select * from %s" %table)
-    tab = _np.array( cur.description )[:,0] 
-    return tab
-
-
-def test_entry(table):
-    cur = _dbfunctions.get_cursor()
-    cur.execute("select * from %s" %table)
-    return cur.fetchone()
-"""
 
 
 def _get_table_names():
@@ -36,6 +19,7 @@ def get_my_tables(user=None):
     """
     Return all of a user's  tables from the DB.
     Default user=None returns your own tables.
+
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
@@ -51,6 +35,7 @@ def get_my_tables(user=None):
 def drop(tables):
     """
     Delete the tables in the list. You must own them.
+
     """
     cur = _desdb.connect()
     for table in tables:
@@ -63,6 +48,7 @@ def get_quota(user=None):
     """
     Return user's DB quota.
     Default user=None returns your own quota.
+
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
@@ -97,6 +83,7 @@ def check_usage(user=None):
     """
     Print a summary of a user's DB usage
     Default user=None prints your own usage
+
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
@@ -109,11 +96,14 @@ def check_usage(user=None):
 def search_tables(tables, key):
     """
     Search a list of tables for a string, and return any containing that string
+
     Arguments:
-        tables: a list of table names
-        key: string to search for
+    tables: a list of table names
+    key: string to search for
+
     Returns:
-        a list of the tables identified
+    a list of the tables identified
+
     """
     ts = []
     for name in tables:
@@ -174,6 +164,28 @@ def IndexBalrog(db, dname, tab, what, name):
         print q
         arr = cur.quick(q, array=True)
 
+
+'''
+def print_table_cols(table):
+    cur = _dbfunctions.get_cursor()
+    cur.execute("select * from %s" %table)
+    tab = _np.array( cur.description )[:,0] 
+    for t in tab:
+        print t
+
+
+def get_table_cols(table):
+    cur = _dbfunctions.get_cursor()
+    cur.execute("select * from %s" %table)
+    tab = _np.array( cur.description )[:,0] 
+    return tab
+
+
+def test_entry(table):
+    cur = _dbfunctions.get_cursor()
+    cur.execute("select * from %s" %table)
+    return cur.fetchone()
+'''
 
 '''
 def GetHealPixRectangles(nside, index, nest=False):
