@@ -72,6 +72,13 @@ def LineSegment(ax=None, left=None, right=None, plotkwargs={}):
     return ax
 
 
+def _getMapLocation(cat=None, ra=None, dec=None, nside=512, nest=False, map=None):
+    ipix = _es.hp.RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
+    upix = _np.unique(ipix)
+    vals = map[upix]
+    lon, lat = _es.hp.Healpix2RaDec(upix, nside=nside, nest=nest)
+    return vals, lat, lon
+
 def _getCountLocation(cat=None, ra=None, dec=None, nside=512, nest=False):
     ipix = _es.hp.RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
     bc = _np.bincount(ipix)
@@ -96,9 +103,7 @@ def _lon2RA(lon):
     return "%d:%sh" % (hours, minutes)
 
 
-# The Basemap stuff seems to get confused if you try to put more than one axis on a plot.
-def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0 ):
-
+def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, f=_getCountLocation, extrakwargs={} ):
     if fig is None:
         fig, ax = plt.subplots(1,1, figsize=(6.5*nside/512,6*nside/512))
     if ax is None:
@@ -108,10 +113,8 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     h = r * _np.radians(dims[1])
     w = r * _np.cos(_np.radians(center[1])) * _np.radians(dims[0])
 
-    #m = _Basemap(projection='aea', width=dims[0], height=dims[1], lat_0=lat_0, lat_1=-61, lat_2=-42., lon_0=-75., ax=ax)
     m = _Basemap(projection='aea', width=w, height=h, lat_0=center[1], lon_0=center[0], ax=ax)
-
-    bc, lat, lon = _getCountLocation(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
+    bc, lat, lon = f(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest, **extrakwargs)
     x,y  = m(lon, lat)
 
     if vmin is None:
@@ -120,16 +123,6 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
         vmax = _np.amax(bc)
     sc = m.scatter(x,y,c=bc, linewidths=0, s=9, marker='s', vmin=vmin, vmax=vmax, rasterized=True, cmap=_cm.YlOrRd, ax=ax)
 
-    #ax.text(0.05, 0.95, 'Stars', ha='left', va='top', transform=ax.transAxes)
-
-    # draw parallels and meridians.
-    # label on left and bottom of map.
-    #m.drawparallels(parallels,labels=[0,1,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(2)))
-
-    # declination cut
-    #m.drawparallels([-58],labels=[0,0,0,0], color='#444444', dashes=[1,0], linewidth=1)
-    #x,y = m(-91.5, -57.8)
-    #ax.text(x,y, r'$\delta = -58^\circ$', color='#444444', ha='left', va='bottom', size=14, rotation=11)
 
     if rafmt=='h':
         m.drawmeridians(meridians,labels=[0,0,0,1], fmt=_Lon2RA, linewidth=0.5)
@@ -146,6 +139,16 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     cb = m.colorbar(sc,"right", size="3%", pad='0%')
     if clabel is not None:
         cb.set_label(clabel)
-    cb.set_ticklabels(_np.linspace(vmin, vmax, (vmax - vmin)/1 + 1, dtype='int32'))
+    #cb.set_ticklabels(_np.linspace(vmin, vmax, (vmax - vmin)/1 + 1, dtype='int32'))
     cb.solids.set_edgecolor("face")
+
+
+def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0 ):
+
+    _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getCountLocation, extrakwargs={} )
+
+
+def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, map=None ):
+    nside = _hp.npix2nside(map.size)
+    _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getMapLocation, extrakwargs={'map':map} )
 

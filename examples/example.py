@@ -56,6 +56,11 @@ if __name__ == "__main__":
     map_ax[1].set_title('SV Map')
     plt.tight_layout(w_pad=3, pad=3)
 
+    bfile = os.path.join(supdir,'nside4096_oversamp4/','SVA1_IMAGE_SRC_band_z_nside4096_oversamp4_FWHM_coaddweights_mean.fits.gz')
+    bmap, bnest = es.hp.GetBorisMap(bfile)
+    bfig, bax = plt.subplots(1,1)
+    es.plot.MapValPlot(ax=bax, fig=bfig, cat=sv_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', parallels=np.arange(-60.,0.,2.), meridians=np.arange(0.,360.,5.), dims=[20,5], clabel=r'FWHM', center=[72,-57], xoffset=0.6, rafmt='h', map=bmap, nest=bnest)
+
 
 
     # SLR correct the data
