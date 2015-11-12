@@ -1,5 +1,5 @@
 """
-:mod:`system` has functions for working with system resources.
+The :mod:`system` submodule has functions for working with system resources.
 
 """
 

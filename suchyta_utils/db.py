@@ -1,5 +1,13 @@
 """
-Test Stuff
+The :mod:`suchyta_utils.db` submodule is for working with the DES Oracle database, particularly the user DB space.
+Mostly, it's functions for calling Oracle commands whose syntax I tend to forget,
+that I don't want to have to google every time I use them.
+(Like most physicists, I'm far from an Oracle expert.)
+
+
+.. note::
+    For :mod:`suchyta_utils.db` to work, you need to have your .netrc file setup for the DESDM DB.
+    (see the `desdb github repository <https://github.com/esheldon/desdb#access-to-servers>`_).
 
 """
 
@@ -15,10 +23,19 @@ def _get_table_names():
     return _np.array( cur.fetchall() )[:,:]
 
 
-def get_my_tables(user=None):
+def GetTableNames(user=None):
     """
-    Return all of a user's  tables from the DB.
-    Default user=None returns your own tables.
+    Get all of a user's tables from the DB.
+
+    Parameters
+    ----------
+    user (str)
+        The username whose tables you want to return. None means use your personal username (read from the .netrc file).
+
+    Returns
+    -------
+    tables (list)
+        List of the table's owned by the specified user
 
     """
     if user is None:
@@ -32,9 +49,19 @@ def get_my_tables(user=None):
             tables.append(name[1])
     return tables
 
-def drop(tables):
+
+def Drop(tables):
     """
-    Delete the tables in the list. You must own them.
+    Delete tables from the DB. (You must own them.)
+
+    Parameters
+    ----------
+    tables (list)
+        A list, where each entry is a (str) table name
+
+    Returns
+    -------
+    None
 
     """
     cur = _desdb.connect()
@@ -44,10 +71,19 @@ def drop(tables):
     cur.commit()
 
 
-def get_quota(user=None):
+def GetQuota(user=None):
     """
-    Return user's DB quota.
-    Default user=None returns your own quota.
+    Get a user's DB quota (in GB).
+
+    Parameters
+    ----------
+    user (str)
+        The username whose quota you want to return. None means use your personal username (read from the .netrc file).
+
+    Returns
+    -------
+    quota (float)
+        The user's quota in GB.
 
     """
     if user is None:
@@ -57,7 +93,7 @@ def get_quota(user=None):
     cur = _desdb.connect()
     q = "SELECT USERNAME, TABLESPACE_NAME, MAX_BYTES from DBA_TS_QUOTAS WHERE USERNAME='%s'" %(user)
     all = cur.quick(q, array=True)
-    return all['max_bytes'][0] / _np.power(1024., 3), 'GB'
+    return all['max_bytes'][0] / _np.power(1024., 3)
 
 
 def _add(tables, user='SUCHYTA1'):
@@ -79,30 +115,46 @@ def _add(tables, user='SUCHYTA1'):
 
     print count/_np.power(1024.0, 3), 'GB'
 
-def check_usage(user=None):
+
+def PrintUsage(user=None):
     """
-    Print a summary of a user's DB usage
-    Default user=None prints your own usage
+    Print a summary of a user's DB usage.
+    Each line prints a table, and its GB usage.
+    The last line prints the total usage
+
+    Parameters
+    ----------
+    user (str)
+        The username whose quota you want to return. None means use your personal username (read from the .netrc file).
+
+    Returns
+    -------
+    None
 
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
         user = user.upper()
 
-    tables = get_my_tables(user=user)
+    tables = GetTableNames(user=user)
     _add(tables, user=user)
 
 
-def search_tables(tables, key):
+def SearchTables(tables, key):
     """
-    Search a list of tables for a string, and return any containing that string
+    Find which tables in a list contain a string.
 
-    Arguments:
-    tables: a list of table names
-    key: string to search for
+    Parameters
+    ----------
+    tables (list)
+        A list, where each entry is a (str) table name
+    key (str)
+        String to search the list for
 
-    Returns:
-    a list of the tables identified
+    Returns
+    -------
+    matches (list)
+        A (str) list of the tables identified as matches
 
     """
     ts = []
@@ -152,10 +204,10 @@ def Combine(r1, r2, outr, bands=['G','R','I','Z','Y'], types=['TRUTH','NOSIM','S
 '''
 
 
-def IndexBalrog(db, dname, tab, what, name):
-    """
+"""
     For indexing Balrog tables. Don't use this if you don't know what you're doing.
-    """
+"""
+def IndexBalrog(db, dname, tab, what, name):
     cur = _desdb.connect()
 
     bands = ['det', 'g', 'r', 'i', 'z', 'y']

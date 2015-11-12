@@ -1,5 +1,5 @@
 """
-The :mod:`hp` submodule is for working with HEALPix maps in python.
+The :mod:`suchyta_utils.hp` submodule is for working with HEALPix maps in python.
 Most of the functions are things I commonly do which make healpy calls underneath.
 The functions are generally designed to be able to intuitively handle either objects which amount to recarrays
 or seperate RA/DEC arrays.
@@ -100,6 +100,11 @@ def RaDec2Healpix(ra=None, dec=None, nside=None, nest=False, cat=None):
         HEALPix nside
     nest (bool)
         Whether or not to use nested format
+
+    Returns
+    -------
+    index (int)
+        Array of the HEALPix indexes for each RA/DEC pair.
 
     """
     _nsideExcept(nside)
