@@ -1,9 +1,36 @@
+"""
+:mod:`suchyta_utils.balrog` is some functions for working with Balrog catalogs.
+
+"""
+
 import numpy as _np
 import esutil as _es
 import copy as _copy
 
 
 def BinnedAvg(cat=None, bins=None, binon=None, avgon=None, kind='avg'):
+    """
+    Bin the data on some field and then tompute an average of another field in each bin.
+
+    Parameters
+    ----------
+    cat (Structured array)
+        The structured data array (e.g. numpy recarray)
+    bins (float array)
+        The bin edges to bin the data
+    binon (str)
+        A column name. The column which the data will be divided into `bins`.
+    avgon (str)
+        A column name. The column to take an average in each bin.
+    kind (str)
+        What kind of average to do. Available options are ['avg', 'median']
+
+    Returns
+    -------
+    avg (float array)
+        The averages in each bin
+
+    """
     a = _np.zeros(len(bins)-1)
     for i in range(len(bins)-1):
         cut =  (cat[binon] > bins[i]) & (cat[binon] < bins[i+1])
@@ -18,15 +45,37 @@ def BinnedAvg(cat=None, bins=None, binon=None, avgon=None, kind='avg'):
     return a
 
 
-def Completeness(sim=None, truth=None, bins=None):
+def Completeness(sim=None, truth=None, binon='mag_i', bins=None):
+    """
+    Compute the completeness of a Balrog catalog.
+
+    Parameters
+    ----------
+    sim (structured array)
+       'sim' data array, i.e. the detected Balrog objects
+    truth (stuctured array)
+        'truth' data array, i.e. all the truth Balrog objects
+    binon (str)
+        Column name to use in both the `sim` and `truth` arrays (but it needs to be a truth column).
+        What to compute the completeness as a function of.
+    bins (array)
+        Array of the bin edges to use.
+
+    Returns
+    -------
+    comp (float array)
+        The completeness in each bin
+        
+    """
     c = _np.zeros(len(bins)-1)
     for i in range(len(bins)-1):
-        scut = (sim > bins[i]) & (sim < bins[i+1])
-        tcut = (truth > bins[i]) & (truth < bins[i+1])
-        den = _np.sum(tcut)
+        tcut = (truth[binon] > bins[i]) & (truth[binon] < bins[i+1])
+        scut = (sim[binon] > bins[i]) & (sim[binon] < bins[i+1])
+        den = float(_np.sum(tcut))
+        num = float(_np.sum(scut))
 
         if den > 0:
-            c[i] = float(_np.sum(scut)) / den
+            c[i] = num / den
         else:
             c[i] = _np.nan
 
@@ -52,17 +101,27 @@ def _nnmatch(matched, nosim, id, version):
 
 def RemoveNosim(m, nosim, version=None, id='balrog_index'):
     """
-    Do some stuff
-
+    Remove entries from the Balrog measurement catalog ('sim') whose detection position is nearby a previously existing object ('nosim').
+    This is done by matching the two catalogs on an index.
+        
     Parameters
     ----------
-    m: catalog
-        Something
+    m (stuctured array)
+        Measurement ('sim') data array
+    nosim (structured array)
+        'Nosim' data array
+    id (str)
+        Column name to match on
+    version (str/None)
+        None amounts to assuming that truth values for the `id` column are unique throughout the table.
+        However, we often concatenate multiple Balrog tables together, so this is not always the case.
+        `version` is a column name which differentiates which table the data came from, as a second indexing column
+        to remove the 'nosim' entries from 'sim'
 
     Returns
     -------
-    thing: some type
-        Explain
+    trimmed (structured array)
+        The new data array
 
     """
     matched = _np.copy(m)
@@ -73,6 +132,22 @@ def RemoveNosim(m, nosim, version=None, id='balrog_index'):
     return matched
 
 def AddModestNeed(keys, release='sva1'):
+    """
+    Add any missing keys to a list that needed to compute `modest_class` for a dataset.
+
+    Parameters
+    ----------
+    keys (str array)
+        Some set of field names
+    release (str)
+        Year of the dataset. Allowed values are ['sva1', 'y1a1']
+
+    Returns
+    -------
+    newkeys (str array)
+        A new list which includes any keys which were missing
+
+    """
     k = _copy.copy(keys)
     if release=='sva1':
         extra = ['flags_i', 'class_star_i', 'mag_auto_i', 'spread_model_i', 'spreaderr_model_i', 'mag_psf_i']
@@ -90,13 +165,23 @@ def Modest(data, release='sva1'):
     """
     Find the modest class classifications for the data. The array must have all the required fields or you'll get an error.
 
-    * ``data``: Equivalent to a numpy recarray
-    * ``release``: Allowed values ['sva1', 'y1a1']
-
     .. warning::
         Currently, the Balrog setup is not able to completely recreate the modest classification for Y1A1.
         It depends on `wavg_spread_model_i`, a weighted average of the i-band single-epoch `spread_model` measurements.
         Balrog is only running on the coadd images for now.
+
+    Parameters
+    ----------
+    data (structure array) 
+        The data array to find `modest_class` for each object
+    release (str)
+        Year of the dataset. Allowed values are ['sva1', 'y1a1']
+
+
+    Returns
+    -------
+    modest (int array)
+        Array of the modest classification for each object
 
     """
 

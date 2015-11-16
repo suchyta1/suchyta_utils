@@ -60,14 +60,43 @@ class SLR:
 
     def GetMagShifts(self, band, ra, dec):
         """
-        Test
+        For each RA/DEC pair, find the SLR offset to be applied to the uncorrected magnitude measurements
+
+        Parameters
+        ----------
+        band (str)
+            DES pass band. Possible values are ['g','r','i','z','y'], but y-band was not computed for SV
+        ra (float array)
+            RA coordinates
+        dec (float array)
+            DEC coordinates
+
+        Returns
+        -------
+        mag (float array)
+            The shifts to be added to raw magnituded meausrements
 
         """
         return self.slrshift.get_zeropoint_offset(band, ra, dec, interpolate=True)
 
+
     def GetFluxFactors(self, band, ra, dec):
         """
-        Test
+        For each RA/DEC pair, find the SLR multiplicative to be applied to the flux measurements
+
+        Parameters
+        ----------
+        band (str)
+            DES pass band. Possible values are ['g','r','i','z','y'], but y-band was not computed for SV
+        ra (float array)
+            RA coordinates
+        dec (float array)
+            DEC coordinates
+
+        Returns
+        -------
+        f (float array)
+            The factors to multiply the raw flux meausrements by
 
         """
         offsets = self.GetMagShifts(band, ra, dec)

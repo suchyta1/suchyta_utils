@@ -11,6 +11,13 @@ You shouldn't consider this an "offical" product of anything, but I do my best k
 (be it for DES, astronomy, or whatever).
 The code is hosted on `github <https://github.com/suchyta1/suchyta_utils>`_.
 
+If you find a bug or have pull request, feel free to post an issue on github.
+You can also email me: eric.d.suchyta@gmail.com.
+
+Throughout the documentation, I assume you're reasonably fluent in python, numpy, matplotlib, FITS files, etc.
+I'm also lazy about some argument types: lists, tuples, numpy arrays, etc. I just call arrays.
+Stuctured arrays can be actual numpy objects, or more or less equivalent things from pyfits or similar.
+
 The package is organized into submodules, whose contents are limited to a farily specific scope.
 
 .. toctree::
