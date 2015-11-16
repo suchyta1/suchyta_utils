@@ -1,5 +1,15 @@
 """
-The :mod:`slr` 
+The :mod:`suchyta_utils.slr` submodule is for applying the DES stellar locus regression (SLR) to the DES (or Balrog) data.
+Both Y1A1 and SVA1 are supported.
+
+.. note::
+    DESers can download the SLR python scripts and FITS files from the 
+    `supplementary directory <http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/supplementary/files/>`_.
+    ``y1a1_slr_shiftmap.py`` is the same file as available `Y1 Redmine page <https://cdcvs.fnal.gov/redmine/projects/des-y1/wiki/SLR_Adjustment_of_Y1A1>`_, 
+    but ``sva1_slr_shiftmap.py`` is a modified version of what's available from the 
+    `SVA1 wiki pages <https://cdcvs.fnal.gov/redmine/projects/descalibration/wiki/Stellar_Locus_Regression_for_SVA1_on_HEALPix_Grid>`_. 
+    I changed some function names and returns to be consistent with the Y1 version. 
+    In the future I should probably write my code to use the SVA1 file verbatim from Redmine, but that's not the case yet.
 
 """
 
@@ -9,8 +19,28 @@ import numpy as _np
 
 
 class SLR:
+    """
+    Instantiate an SLR object. Both the FITS file and the python file for the release must both live in `slrdir`.
+    One must also make sure to have the appropriate FITS file for Y1, between wide, D04, D10, and DFull.
+
+    Parameters
+    ----------
+    release (str)
+        'y1a1' or 'sva1' are valid
+    area (str)
+        Only relevant with ``release = y1a1``. Which dataset the SLR is for. Valid choices are ['wide', 'd04', 'd10', 'dfull']
+    slrdir (str)
+        Directory for the SLR FITS files and python scripts.
+
+    Returns
+    -------
+    slr (object)
+        An SLR object whose methods can be called to get corrections.
+
+    """
 
     def __init__(self, release='y1a1', area='wide', slrdir=None):
+
         self.slrdir = slrdir
         if self.slrdir is None:
             self.slrdir = _os.path.dirname(_os.path.realpath(__file__))
@@ -29,9 +59,17 @@ class SLR:
 
 
     def GetMagShifts(self, band, ra, dec):
+        """
+        Test
+
+        """
         return self.slrshift.get_zeropoint_offset(band, ra, dec, interpolate=True)
 
     def GetFluxFactors(self, band, ra, dec):
+        """
+        Test
+
+        """
         offsets = self.GetMagShifts(band, ra, dec)
         return _np.power(10.0, -offsets/2.5)
 
