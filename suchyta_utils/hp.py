@@ -3,6 +3,33 @@ The :mod:`suchyta_utils.hp` submodule is for working with HEALPix maps in python
 Most of the functions are things I commonly do which make healpy calls underneath.
 The functions are generally designed to be able to intuitively handle either objects which amount to recarrays
 or seperate RA/DEC arrays.
+
+Here's a snippet from the git repository's `example.py <https://github.com/suchyta1/suchyta_utils/blob/master/examples/example.py>`_,
+which demonstrates how to use some of the functions::
+
+    # Put all the supplementary DES files in some directory
+    supdir = './supplementary'
+
+    # Y1 files
+    y1_data_file = os.path.join(supdir, 'balrog-small-y1.fits')
+    y1_footprint_file = os.path.join(supdir, 'y1a1_gold_1.0.1_wide+d04_footprint_4096.fit.gz')
+    y1_badmask_file = os.path.join(supdir, 'y1a1_gold_1.0.1_wide+d04_badmask_4096.fit.gz')
+
+    # Apply the Y1A1 footprint and 4% exclusion mask to the Balrog data. 
+    # Do everything with objects, not file names. This is always at least as fast as all filen names. (Particularly if one uses things multiple times.)
+    y1_data = esutil.io.read(y1_data_file)
+    y1_footprint, y1_footprint_nest = es.hp.GetHPMap(y1_footprint_file)
+    y1_data = es.hp.ApplyMask(mask=y1_footprint, nest=y1_footprint_nest, cat=y1_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='>=')
+    y1_badmask, y1_badmask_nest = es.hp.GetHPMap(y1_badmask_file)
+    y1_data = es.hp.ApplyMask(mask=y1_badmask, nest=y1_badmask_nest, cat=y1_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=0, cond='=')
+
+    # SV files
+    sv_data_file = os.path.join(supdir, 'balrog-small-sv.fits')
+    sv_goodmask_file = os.path.join(supdir, 'sva1_gold_1.0.4_goodregions_04_equ_ring_4096.fits.gz')
+
+    # Apply the SVA1 4% exclusion mask to the Balrog data. Do everything with file names.
+    sv_data = esutil.io.read(sv_data_file)
+    sv_ra, sv_dec = es.hp.ApplyMask(mask=sv_goodmask_file, ra=sv_data['alphawin_j2000_i'], dec=sv_data['deltawin_j2000_i'], val=1, cond='=')
     
 """
 
@@ -174,33 +201,6 @@ def ApplyMask(ra=None, dec=None, mask=None, nest=False, cat=None, nocut=False, v
         | 3) ``if (cat is None) and (not nocut)``, return a 2D list of the [RA, DEC] that survive the masking.
 
     
-    Examples
-    --------
-    Here's a snippet from the `git repository's example.py <https://github.com/suchyta1/suchyta_utils/blob/master/examples/example.py>`_::
-
-        # Put all the supplementary DES files in some directory
-        supdir = './supplementary'
-    
-        # Y1 files
-        y1_data_file = os.path.join(supdir, 'balrog-small-y1.fits')
-        y1_footprint_file = os.path.join(supdir, 'y1a1_gold_1.0.1_wide+d04_footprint_4096.fit.gz')
-        y1_badmask_file = os.path.join(supdir, 'y1a1_gold_1.0.1_wide+d04_badmask_4096.fit.gz')
-
-        # Apply the Y1A1 footprint and 4% exclusion mask to the Balrog data. 
-        # Do everything with objects, not file names. This is always at least as fast as all filen names. (Particularly if one uses things multiple times.)
-        y1_data = esutil.io.read(y1_data_file)
-        y1_footprint, y1_footprint_nest = es.hp.GetHPMap(y1_footprint_file)
-        y1_data = es.hp.ApplyMask(mask=y1_footprint, nest=y1_footprint_nest, cat=y1_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=1, cond='>=')
-        y1_badmask, y1_badmask_nest = es.hp.GetHPMap(y1_badmask_file)
-        y1_data = es.hp.ApplyMask(mask=y1_badmask, nest=y1_badmask_nest, cat=y1_data, ra='alphawin_j2000_i', dec='deltawin_j2000_i', val=0, cond='=')
-    
-        # SV files
-        sv_data_file = os.path.join(supdir, 'balrog-small-sv.fits')
-        sv_goodmask_file = os.path.join(supdir, 'sva1_gold_1.0.4_goodregions_04_equ_ring_4096.fits.gz')
-
-        # Apply the SVA1 4% exclusion mask to the Balrog data. Do everything with file names.
-        sv_data = esutil.io.read(sv_data_file)
-        sv_ra, sv_dec = es.hp.ApplyMask(mask=sv_goodmask_file, ra=sv_data['alphawin_j2000_i'], dec=sv_data['deltawin_j2000_i'], val=1, cond='=')
 
 
     """

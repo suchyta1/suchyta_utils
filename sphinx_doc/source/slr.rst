@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-slr
-================================
+suchyta_utils.slr -- Applying DES stellar locus regression corrections
+======================================================================
 
 .. automodule:: suchyta_utils.slr
    :members:

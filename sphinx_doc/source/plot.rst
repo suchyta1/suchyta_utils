@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-plot
-================================
+suchyta_utils.plot -- Make nicer looking plots, more easily
+===========================================================
 
 .. automodule:: suchyta_utils.plot
    :members:

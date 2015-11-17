@@ -2,7 +2,8 @@
 (In my mind) :mod:`suchyta_utils.plot` makes plots looks nicer by default
 and makes plotting maps in python more user-friendly.
 
-Here's an example snippet from the `git repository's example.py <https://github.com/suchyta1/suchyta_utils/blob/master/examples/example.py>`_::
+Here's an example snippet from the git repository's `example.py <https://github.com/suchyta1/suchyta_utils/blob/master/examples/example.py>`_,
+which shows some basic usage::
 
     import suchyta_utils as es
     import esutil
@@ -38,7 +39,7 @@ def Setup():
     """
     Setup some automatic styling of matplotlib plots. This started from
     a Supermongo-like style file from Matt Becker, that I probably tweaked to make things look nice to me.
-    It loads `custom-style.mpl`, so look there to see all the settings. 
+    It loads `custom-style.mpl <https://github.com/suchyta1/suchyta_utils/blob/master/suchyta_utils/custom-sytle.mpl>`_, so look there to see all the settings. 
     The most notable thing that I wanted was drawing grid lines.
 
     .. note::

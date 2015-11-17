@@ -60,12 +60,13 @@ class SLR:
 
     def GetMagShifts(self, band, ra, dec):
         """
-        For each RA/DEC pair, find the SLR offset to be applied to the uncorrected magnitude measurements
+        For each RA/DEC pair, find the SLR offset to be added to the uncorrected magnitude measurements
 
         Parameters
         ----------
         band (str)
-            DES pass band. Possible values are ['g','r','i','z','y'], but y-band was not computed for SV
+            DES pass band. Possible values are ``['g','r','i','z','y']``, but y-band was not computed for SV
+            so is invalid in that case
         ra (float array)
             RA coordinates
         dec (float array)
@@ -82,12 +83,13 @@ class SLR:
 
     def GetFluxFactors(self, band, ra, dec):
         """
-        For each RA/DEC pair, find the SLR multiplicative to be applied to the flux measurements
+        For each RA/DEC pair, find the SLR factor to multiply the flux measurements
 
         Parameters
         ----------
         band (str)
-            DES pass band. Possible values are ['g','r','i','z','y'], but y-band was not computed for SV
+            DES pass band. Possible values are ``['g','r','i','z','y']``, but y-band was not computed for SV
+            so is invalid in that case
         ra (float array)
             RA coordinates
         dec (float array)

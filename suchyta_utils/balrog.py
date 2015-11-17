@@ -6,6 +6,77 @@
 import numpy as _np
 import esutil as _es
 import copy as _copy
+import numpy.lib.recfunctions as _rec
+
+
+def _DefineKwargs(kwargs):
+    if 'version' not in kwargs:
+        kwargs[version] = 'version'
+    if 'id' not in kwargs:
+        kwargs['id'] = 'balrog_index'
+    if 'out' not in kwargs:
+        kwargs['out'] = 'balrog_id'
+    kwargs['truth'] = 0
+    return kwargs
+
+
+#def AddUniqueID(truth, *morecats, version='version', id='balrog_index', out='balrog_id'):
+def AddUniqueID(*cats, **kwargs):
+    """
+    Add a column that makes the id which joins the Balrog truth, sim, and nosim tables (called `balrog_index` if you get it from me)
+    be unique, even if multiple tables were stacked together such that `id` was no longer unique.
+    The function just offsets the ids from different table versions.
+    Effectively, it changes a 2D index into a 1D one.
+
+    .. note::
+        By "unique", I mean that `out` will be unique within the truth catalog. 
+        It is possible for mulitiple detections to be associated with the same truth Balrog objects,
+        such that are duplicate `id` entries in `sim` or `nosim` even with a unique identifier in the truth catalog.
+
+    Parameters
+    ----------
+    cats (1 or more stuctured arrays)
+        The leading arguments are non-keyworded, as many catalogs as you want to add the new column to.
+        One of these MUST be the truth catalog, whose position in the argument ordering is given by `truth`.
+
+    kwargs (Keyword arguments)
+        | version (str) -- A column name that differentiates which table the data came from. Default = ``'version'``
+        | id (str) -- Column name that joins truth/sim/nosim. Default = ``'balrog_index'``
+        | out (str) -- Name of the new column. Default = ``'balrog_id'``
+        | truth (int) -- Position in the arguments given of the truth catalog. Default = ``0``
+
+    Returns
+    -------
+    cats (1 or more structured arrays)
+        A list of the arrays with the new columns, ordered in the same order you gave the function arguments.
+
+    """
+    
+    kwargs = _DefineKwargs(kwargs)
+    version = kwargs['version']
+    id = kwargs['id']
+    out = kwargs['out']
+   
+    cats = list(cats)
+    for i in range(len(cats)):
+        cats[i] = _rec.append_fields(cats[i], out, _np.copy(cats[i][version]))
+
+    versions = _np.unique(cats[kwargs['truth']][version])
+    for i in range(len(version)):
+        if i==0:
+            continue
+
+        v = versions[i]
+        v1 = versions[i-1]
+
+        vcut = (cats[kwargs['truth']][version]==v1)
+        max = _np.amax(cats[kwargs['truth']][vcut][id])
+        start = max + 1
+
+        for i in range(len(cats)):
+            cut = (cats[i][version]==v)
+            cats[i][out][cut] = cats[i][id][cut] + start
+    return cats
 
 
 def BinnedAvg(cat=None, bins=None, binon=None, avgon=None, kind='avg'):
@@ -168,7 +239,7 @@ def Modest(data, release='sva1'):
     .. warning::
         Currently, the Balrog setup is not able to completely recreate the modest classification for Y1A1.
         It depends on `wavg_spread_model_i`, a weighted average of the i-band single-epoch `spread_model` measurements.
-        Balrog is only running on the coadd images for now.
+        Balrog is only running on the coadd images for now. The Y1A1 `modest_class` here ignores the `wavg_spread_model_i` condition.
 
     Parameters
     ----------

@@ -11,7 +11,7 @@ You shouldn't consider this an "offical" product of anything, but I do my best k
 (be it for DES, astronomy, or whatever).
 The code is hosted on `github <https://github.com/suchyta1/suchyta_utils>`_.
 
-If you find a bug or have pull request, feel free to post an issue on github.
+If you find a bug or have a pull request, feel free to post an issue on github.
 You can also email me: eric.d.suchyta@gmail.com.
 
 Throughout the documentation, I assume you're reasonably fluent in python, numpy, matplotlib, FITS files, etc.
@@ -27,9 +27,9 @@ The package is organized into submodules, whose contents are limited to a farily
    jk -- Jackknife <jk.rst>
    db -- Database <db.rst>
    slr -- Stellar locus regression <slr.rst>
+   plot -- Matplotlib utils <plot.rst> 
    system <system.rst>
    balrog <balrog.rst>
-   plot <plot.rst>
 
 
 Installation

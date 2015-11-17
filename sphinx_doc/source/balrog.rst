@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-balrog
-================================
+suchyta_utils.balrog -- Working with Balrog + DES catalogs
+==========================================================
 
 .. automodule:: suchyta_utils.balrog
    :members:
