@@ -59,10 +59,10 @@ def AddUniqueID(*cats, **kwargs):
    
     cats = list(cats)
     for i in range(len(cats)):
-        cats[i] = _rec.append_fields(cats[i], out, _np.copy(cats[i][version]))
+        cats[i] = _rec.append_fields(cats[i], out, _np.copy(cats[i][id]))
 
     versions = _np.unique(cats[kwargs['truth']][version])
-    for i in range(len(version)):
+    for i in range(len(versions)):
         if i==0:
             continue
 
@@ -70,12 +70,13 @@ def AddUniqueID(*cats, **kwargs):
         v1 = versions[i-1]
 
         vcut = (cats[kwargs['truth']][version]==v1)
-        max = _np.amax(cats[kwargs['truth']][vcut][id])
-        start = max + 1
+        amax = _np.amax(cats[kwargs['truth']][vcut][out])
+        start = amax + 1
 
-        for i in range(len(cats)):
-            cut = (cats[i][version]==v)
-            cats[i][out][cut] = cats[i][id][cut] + start
+        for j in range(len(cats)):
+            cut = (cats[j][version]==v)
+            cats[j][out][cut] = cats[j][out][cut] + start
+
     return cats
 
 
@@ -116,7 +117,7 @@ def BinnedAvg(cat=None, bins=None, binon=None, avgon=None, kind='avg'):
     return a
 
 
-def Completeness(sim=None, truth=None, binon='mag_i', bins=None):
+def Completeness(sim=None, truth=None, binon='mag_i', bins=None, method='cut', matchon='balrog_index'):
     """
     Compute the completeness of a Balrog catalog.
 
@@ -139,9 +140,14 @@ def Completeness(sim=None, truth=None, binon='mag_i', bins=None):
         
     """
     c = _np.zeros(len(bins)-1)
+
     for i in range(len(bins)-1):
         tcut = (truth[binon] > bins[i]) & (truth[binon] < bins[i+1])
-        scut = (sim[binon] > bins[i]) & (sim[binon] < bins[i+1])
+        if method=='cut':
+            scut = (sim[binon] > bins[i]) & (sim[binon] < bins[i+1])
+        elif method=='match':
+            scut = _np.in1d(sim[matchon], truth[tcut][matchon])
+
         den = float(_np.sum(tcut))
         num = float(_np.sum(scut))
 
