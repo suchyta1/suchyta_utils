@@ -57,6 +57,61 @@ class SLR:
             self.slrshift = _slr.SLRZeropointShiftmap(self.slrfits, fill_periphery=True)
 
 
+    def GetCorrected(self, band, data=None, ra=None, dec=None, kind='mag'):
+
+        if kind=='mag':
+            f = self.GetMagShifts
+        elif kind=='flux':
+            f = self.GetFluxFactors
+
+        shift = f(band, ra, dec)
+        if kind=='mag':
+            dd = data + shift
+        elif kind=='flux':
+            dd = data * shift
+
+        return dd
+
+
+    def ApplySLRBands(self, bands, data=None, ra='alphawin_j2000', dec='deltawin_j2000', kind='mag', key='mag_auto'):
+        """
+        Apply the SLR corrections to the dataset. 
+
+        .. note::
+            This function changes `data` to avoid need to copy the array.
+
+        Parameters
+        ----------
+        bands (str array)
+            Which bands to correct
+        data (structured array)
+            The data with the mag/flux measurements
+        ra (float array/str)
+            Either the array of the RA values, or the column name for the RA column in `data`.
+        dec (float array/str)
+            Either the array of the DEC values, or the column name for the DEC column in `data`.
+        kind (str)
+            Either 'mag' or 'flux' for whether or not you're correcting mags or fluxes
+        key (str)
+            Which column in `data` to correct
+
+        Returns
+        -------
+        data (stuctured array)
+            The new data array with the corrected columns
+
+        """
+        if type(ra)==str:
+            r = data[ra]
+            d = data[dec]
+
+        for band in bands:
+            k = '%s_%s'%(key, band)
+            dd = data[k]
+            new = self.GetCorrected(band, data=data[k], ra=r, dec=d, kind=kind)
+            data[k] = new
+        return data
+
 
     def GetMagShifts(self, band, ra, dec):
         """

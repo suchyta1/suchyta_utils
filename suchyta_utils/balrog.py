@@ -20,6 +20,68 @@ def _DefineKwargs(kwargs):
     return kwargs
 
 
+def ApplyCut(cat, key='objtype', val=1, cond='='):
+    """
+    Apply a cut on a single field to the catalog.
+
+    Parameters
+    ----------
+    cat (structured array)
+        The structured data array (e.g. numpy recarray)
+    key (str)
+        What field to make the cut on
+    cond (str)
+        How the cut is to be applied. Possible values: ``=``, ``<``, ``<=``, ``>``, ``>=``
+    val (float)
+        The value on the right side of `cond`.
+
+    Returns
+    -------
+    cutcat (structured array)
+        The cut version of the catalog
+
+    """
+
+    if cond=='=':
+        use = (cat[key]==val)
+    elif cond=='<':
+        use = (cat[key] < val)
+    elif cond=='<=':
+        use = (cat[key] <= val)
+    elif cond=='>':
+        use = (cat[key] > val)
+    elif cond=='>=':
+        use = (cat[key] >= val)
+
+    return cat[use]
+
+
+def ColorCutGold(cat, key='mag_auto'):
+    """
+    Apply Gold "crazy color" cut
+
+    Parameters
+    ----------
+    cat (structured array)
+        The structured data array (e.g. numpy recarray)
+    key (str)
+        What field to compute the colors using. Strictly speaking DES defines this on `mag_auto` but I kept the field general.
+
+    Returns
+    -------
+    cutcat (structued array)
+        The cut version of the catalog
+
+    """
+
+    gr = cat['%s_g'%(key)] - cat['%s_r'%(key)]
+    iz = cat['%s_i'%(key)] - cat['%s_z'%(key)]
+    cut1 = (-1 < gr) & (gr < 4)
+    cut3 = (-1 < iz) & (iz < 4)
+    cut = (cut1 & cut3)
+    return cat[cut]
+
+
 #def AddUniqueID(truth, *morecats, version='version', id='balrog_index', out='balrog_id'):
 def AddUniqueID(*cats, **kwargs):
     """
@@ -272,7 +334,7 @@ def Modest(data, release='sva1'):
         modest[starcut] = 2
 
         neither = -(galcut | starcut)
-        modest[neither] = 3
+        modest[neither] = 0
 
     elif release=='y1a1':
         ncut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] < -0.002)
