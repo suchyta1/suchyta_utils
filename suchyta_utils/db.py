@@ -116,6 +116,30 @@ def _add(tables, user='SUCHYTA1'):
     print count/_np.power(1024.0, 3), 'GB'
 
 
+def TotalUsage(user=None):
+    """
+    Find total DB usage for the user.
+
+    Parameters
+    ----------
+    user (str)
+        The username whose usage you want to return. None means use your personal username (read from the .netrc file).
+
+    Returns
+    -------
+    usage (float)
+        Usage in GB
+
+    """
+
+    if user is None:
+        user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
+        user = user.upper()
+
+    cur = _desdb.connect()
+    return cur.quick("""SELECT SUM(bytes) as b from dba_extents where owner='%s'"""%(user), array=True)['b'][0] / _np.power(1024.0,3)
+
+
 def PrintUsage(user=None):
     """
     Print a summary of a user's DB usage.
