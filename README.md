@@ -31,7 +31,7 @@ python setup.py install --user
 * [esutil](https://github.com/esheldon/esutil)
 * [desdb](https://github.com/esheldon/desdb)
 * [kmeans_radec](https://github.com/esheldon/kmeans_radec)
-* [mpi4py](https://pypi.python.org/pypi/mpi4py)
+* [mpi4py](https://pypi.python.org/pypi/mpi4py) (Package compiles without it, but will not be able to use the mpi submodule without it)
 
 
 
