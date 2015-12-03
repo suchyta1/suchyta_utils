@@ -3,19 +3,10 @@
 Refer to the Sphinx documenation [here](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/doc/html/).
 I am working to keep it up to date.
 
-<h1> Contents </h1>
-
-`suchyta_utils` is an assortment of some Python tools written by Eric Suchyta in the course of working in DES.
-There are "submodules" for different kinds of utilities:
-
-* `mpi` -- Functions for wrapping and simplifying syntax for common MPI functionality to distribute/collect data during MPI jobs
-* `jk` -- Automatically generate (and save) jackknife realizations of an arbitrary function given data distributed on a sphere
-* `db` -- Managing your user area (or talking to that of other users) in the DES DB 
-
 
 <h1> Examples </h1>
 
-Refer to the [examples](https://github.com/suchyta1/suchyta_utils/tree/master/examples) directory for usage help.
+Refer to the [examples](https://github.com/suchyta1/suchyta_utils/tree/master/examples) directory for some example scripts.
 
 
 <h1> Installation </h1>
@@ -27,7 +18,7 @@ cd suchyta_utils/
 python setup.py install
 ```
 
-If you don't have root privileges you can use `--user` flag:
+If you do not have root privileges you can use `--user` flag:
 ```
 python setup.py install --user
 ```
@@ -35,16 +26,12 @@ python setup.py install --user
 
 <h1> Requirements </h1>
 
-`suchyta_utils.mpi`
-* [mpi4py](https://pypi.python.org/pypi/mpi4py)
 * [numpy](http://www.numpy.org/)
-
-`suchyta_utils.jk`
-* [kmeans_radec](https://github.com/esheldon/kmeans_radec)
-* [numpy](http://www.numpy.org/)
-
-
-`suchtya_utils.db`
-* [desdb](https://github.com/esheldon/desdb)
 * [cx_Oracle](http://cx-oracle.sourceforge.net/)
-* [numpy](http://www.numpy.org/)
+* [esutil](https://github.com/esheldon/esutil)
+* [desdb](https://github.com/esheldon/desdb)
+* [kmeans_radec](https://github.com/esheldon/kmeans_radec)
+* [mpi4py](https://pypi.python.org/pypi/mpi4py)
+
+
+
