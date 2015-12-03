@@ -188,44 +188,54 @@ def SearchTables(tables, key):
     return ts
 
 
-'''
-def Cat2New(t1, t2, outtab, inc):
+def ColumnDescribe(table, user=None):
+    """
+    Get the column names, as well as data type and precsion information about a DB table
+
+    Parameters
+    ----------
+    table (str)
+        Name of the table
+    user (str)
+        Name of the user who owns the table. None does not specify a user. (A user is not needed if the table name is unique.)
+
+    Returns
+    -------
+    arr (structured array)
+        Array with columns [column_name, data_type, data_precision, data_scale]
+
+    """
     cur = _desdb.connect()
-
-    q = """BEGIN
-            EXECUTE IMMEDIATE 'DROP TABLE %s'; \
-            EXCEPTION
-                WHEN OTHERS THEN \
-                    IF SQLCODE != -942 THEN \
-                        RAISE; \
-                    END IF; \
-            END;""" %(outtab)
-    cur.quick(q, array=True)
-
-    q = "CREATE TABLE %s AS SELECT * from %s" %(outtab, t1)
-    cur.quick(q)
-    info = cur.quick("select column_name, data_type, data_length from all_tab_columns where upper(table_name) = '%s'"%(t2), array=True)
-    outnames_i = ', '.join(info['column_name'])
-    outnames_s = outnames_i.replace('BALROG_INDEX', 'BALROG_INDEX + %f'%inc)
-    q = """INSERT INTO %s (%s) SELECT %s FROM %s""" %(outtab, outnames_i, outnames_s, t2)
-    cur.quick(q) 
-    cur.quick('COMMIT WORK')
+    if user is not None:
+        arr = cur.quick("SELECT column_name, data_type, data_precision, data_scale from all_tab_cols where table_name='%s' and owner='%s'"%(table.upper(),user.upper()), array=True)
+    else:
+        arr = cur.quick("SELECT column_name, data_type, data_precision, data_scale from all_tab_cols where table_name='%s'"%(table.upper()), array=True)
+    return arr
 
 
-def Combine(r1, r2, outr, bands=['G','R','I','Z','Y'], types=['TRUTH','NOSIM','SIM','DES']):
+def IndexDescribe(table, user=None):
+    """
+    Get information about the indexing of a table. 
+
+    Parameters
+    ----------
+    table (str)
+        Name of the table
+    user (str)
+        Name of the user who owns the table. None does not specify a user. (A user is not needed if the table name is unique.)
+
+    Returns
+    -------
+    arr (structured array)
+        Array with several columns [index_owner, index_name, table_owner, table_name, column_name, column_position, column_length, char_length, descend] 
+
+    """
     cur = _desdb.connect()
-    all = cur.quick("select count(*) as count from %s_TRUTH_G" %(r1), array=True)
-    print all
-    inc = all['count'][0]
-
-    for band in bands:
-        for type in types:
-            outname = '%s_%s_%s' %(outr, type, band)
-            rr1 = '%s_%s_%s' %(r1, type, band)
-            rr2 = '%s_%s_%s' %(r2, type, band)
-            print rr1, rr2, '-->', outname
-            Cat2New(rr1, rr2, outname, inc)
-'''
+    if user is not None:
+        arr = cur.quick("select * from dba_ind_columns where table_name='%s' and table_owner='%s'"%(table.upper(),user.upper()), array=True)
+    else:
+        arr = cur.quick("select * from dba_ind_columns where table_name='%s'"%(table.upper()), array=True)
+    return arr
 
 
 """
@@ -283,41 +293,4 @@ def GetHealPixRectangles(nside, index, nest=False):
 
     return ramin, ramax, decmin, decmax
 
-
-
-def Cat2Existing(existing, new):
-    cur = _desdb.connect()
-    info = cur.quick("select count(*) as num from %s" %(existing), array=True)
-    num = int(info['num'])
-    
-    info = cur.quick("select column_name, data_type, data_length from all_tab_columns where upper(table_name) = '%s'"%(new), array=True)
-    if type!='DES':
-        cut = (info['column_name']=='balrog_index')
-        info['column_name'][cut] = 'balrog_index+%i' %(num)
-
-    outnames = ', '.join(info['column_name'])
-    innames = _np.core.defchararray.add(_np.array( ['input.']*len(info)), info['column_name'])
-    innames = ', '.join(innames)
-    q = """INSERT INTO %s (%s) 
-                SELECT %s
-                FROM %s input""" %(existing, outnames, innames, new)
-    print q
-    cur.quick(q, array=True)
-
-
-
-In [155]: def plotband(band, num):
-    bins = _np.arange(0.1, 20, 0.2); cs = 0; fw = 20; s2n = 0; deb = 11
-    sim = cur.quick("select sim.flux_auto, sim.fluxerr_auto, sim.fwhm_image, sim.class_star from balrog_debug%i_sim_%s sim where sim.class_star > %f and sim.fwhm_image < %f" %(deb, band,cs,fw), array=True); print len(sim); sn = sim['flux_auto']/sim['fluxerr_auto']; cut = (sn > s2n); sim = sim[cut];
-    des = cur.quick("select flux_auto, fluxerr_auto, fwhm_image from balrog_debug%i_des_%s where class_star > %f and fwhm_image < %f" %(deb, band,cs,fw), array=True); print len(des); sn = des['flux_auto']/des['fluxerr_auto']; cut = (sn > s2n); des = des[cut];
-    ax = fig.add_subplot(2,2, num)
-    ax.hist(sim['fwhm_image'], bins=bins, normed=True, label='sim', color='red', alpha=0.5)
-    ax.hist(des['fwhm_image'], bins=bins, normed=True, label='des', color='blue', alpha=0.5)
-    ax.set_xlabel('fwhm_image')
-    ax.legend(loc='best')
-    ax.set_title(band)
-    print _np.average(sim['fwhm_image']), _np.average(des['fwhm_image'])
-   .....: 
-
-In [156]: fig = plt.figure(1, figsize=(12,7));  plotband('det', 1); plotband('r', 2); plotband('i', 3); plotband('z', 4); plt.tight_layout(); plt.show()
 '''
