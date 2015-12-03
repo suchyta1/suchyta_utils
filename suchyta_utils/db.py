@@ -16,6 +16,22 @@ import desdb as _desdb
 import numpy as _np
 
 
+def GetUser():
+    """
+    Get your user name from the .netrc file
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    username (str)
+
+    """
+    user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
+    return user
+
 
 def _get_table_names():
     cur = _dbfunctions.get_cursor()
