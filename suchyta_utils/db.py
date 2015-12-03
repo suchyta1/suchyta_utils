@@ -252,28 +252,11 @@ def IndexBalrog(db, dname, tab, what, name):
 
 
 '''
-def print_table_cols(table):
-    cur = _dbfunctions.get_cursor()
-    cur.execute("select * from %s" %table)
-    tab = _np.array( cur.description )[:,0] 
-    for t in tab:
-        print t
-
-
-def get_table_cols(table):
-    cur = _dbfunctions.get_cursor()
-    cur.execute("select * from %s" %table)
-    tab = _np.array( cur.description )[:,0] 
-    return tab
-
-
 def test_entry(table):
     cur = _dbfunctions.get_cursor()
     cur.execute("select * from %s" %table)
     return cur.fetchone()
-'''
 
-'''
 def GetHealPixRectangles(nside, index, nest=False):
     vec_corners = hp.boundaries(nside, index, nest=nest)
     vec_corners = _np.transpose(vec_corners, (0,2,1))
@@ -292,5 +275,4 @@ def GetHealPixRectangles(nside, index, nest=False):
     decmax = _np.amax(dec_corners, axis=-1)
 
     return ramin, ramax, decmin, decmax
-
 '''
