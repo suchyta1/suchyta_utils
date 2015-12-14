@@ -56,12 +56,11 @@ def GetTableNames(user=None):
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
-        user = user.upper()
 
     names = _get_table_names()
     tables = []
     for name in names:
-        if name[0].find(user)!=-1:
+        if name[0].find(user.upper())!=-1:
             tables.append(name[1])
     return tables
 
@@ -104,10 +103,9 @@ def GetQuota(user=None):
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
-        user = user.upper()
 
     cur = _desdb.connect()
-    q = "SELECT USERNAME, TABLESPACE_NAME, MAX_BYTES from DBA_TS_QUOTAS WHERE USERNAME='%s'" %(user)
+    q = "SELECT USERNAME, TABLESPACE_NAME, MAX_BYTES from DBA_TS_QUOTAS WHERE USERNAME='%s'" %(user.upper())
     all = cur.quick(q, array=True)
     return all['max_bytes'][0] / _np.power(1024., 3)
 
@@ -116,7 +114,7 @@ def _add(tables, user='SUCHYTA1'):
     cur = _desdb.connect()
     count = 0
     for n in tables:
-        q = """SELECT SUM(bytes), SUM(bytes) B from dba_extents where owner='%s' and segment_name='%s'""" %(user, n)
+        q = """SELECT SUM(bytes), SUM(bytes) B from dba_extents where owner='%s' and segment_name='%s'""" %(user.upper(), n)
 
         '''
         all = cur.quick(q, array=True)
@@ -150,10 +148,9 @@ def TotalUsage(user=None):
 
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
-        user = user.upper()
 
     cur = _desdb.connect()
-    return cur.quick("""SELECT SUM(bytes) as b from dba_extents where owner='%s'"""%(user), array=True)['b'][0] / _np.power(1024.0,3)
+    return cur.quick("""SELECT SUM(bytes) as b from dba_extents where owner='%s'"""%(user.upper()), array=True)['b'][0] / _np.power(1024.0,3)
 
 
 def PrintUsage(user=None):
@@ -174,10 +171,9 @@ def PrintUsage(user=None):
     """
     if user is None:
         user, pwd = _dbfunctions.retrieve_login(_dbfunctions.db_specs.db_host)
-        user = user.upper()
 
-    tables = GetTableNames(user=user)
-    _add(tables, user=user)
+    tables = GetTableNames(user=user.upper())
+    _add(tables, user=user.upper())
 
 
 def SearchTables(tables, key):
