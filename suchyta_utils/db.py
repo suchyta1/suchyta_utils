@@ -254,41 +254,28 @@ def IndexDescribe(table, user=None):
     return arr
 
 
-"""
-    For indexing Balrog tables. Don't use this if you don't know what you're doing.
-"""
-def IndexBalrog(db, dname, tab, what, name):
+def ConstraintDescribe(table, user=None):
+    """
+    Get information about the constraints of a table. 
+
+    Parameters
+    ----------
+    table (str)
+        Name of the table
+    user (str)
+        Name of the user who owns the table. None does not specify a user. (A user is not needed if the table name is unique.)
+
+    Returns
+    -------
+    arr (structured array)
+        Array with columns [owner, constraint_name, table_name, column_name, position]
+
+    """
     cur = _desdb.connect()
+    if user is not None:
+        arr = cur.quick("select * from user_cons_columns where table_name='%s' and owner='%s'"%(table.upper(),user.upper()), array=True)
+    else:
+        arr = cur.quick("select * from user_cons_columns where table_name='%s'"%(table.upper()), array=True)
+    return arr
 
-    bands = ['det', 'g', 'r', 'i', 'z', 'y']
-    for band in bands:
-        q = "CREATE INDEX i_%s_%s%s_%s ON balrog_%s_%s_%s %s" %(dname,tab[0],band[0],name, db,tab,band,what)
-        print q
-        arr = cur.quick(q, array=True)
 
-
-'''
-def test_entry(table):
-    cur = _dbfunctions.get_cursor()
-    cur.execute("select * from %s" %table)
-    return cur.fetchone()
-
-def GetHealPixRectangles(nside, index, nest=False):
-    vec_corners = hp.boundaries(nside, index, nest=nest)
-    vec_corners = _np.transpose(vec_corners, (0,2,1))
-    vec_corners = _np.reshape(vec_corners, (vec_corners.shape[0]*vec_corners.shape[1], vec_corners.shape[2]))
-   
-    theta_corners, phi_corners = hp.vec2ang(vec_corners)
-    theta_corners = _np.reshape(theta_corners, (theta_corners.shape[0]/4, 4))
-    phi_corners = _np.reshape(phi_corners, (phi_corners.shape[0]/4, 4))
-
-    ra_corners = _np.degrees(phi_corners)
-    dec_corners = 90.0 - _np.degrees(theta_corners)
-
-    ramin = _np.amin(ra_corners, axis=-1)
-    ramax = _np.amax(ra_corners, axis=-1)
-    decmin = __np.amin(dec_corners, axis=-1)
-    decmax = _np.amax(dec_corners, axis=-1)
-
-    return ramin, ramax, decmin, decmax
-'''

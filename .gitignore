@@ -1,0 +1,6 @@
+**/*.pyc
+build/
+dist/
+examples/supplementary-setup/
+examples/supplementary/
+suchyta_utils.egg-info/
