@@ -350,3 +350,59 @@ def Modest(data, release='sva1'):
         modest[nncut] = 3
 
     return modest
+
+
+
+def AngularDistance(ra1, ra2, dec1, dec2):
+    """
+    Get the angular distance between points (in degrees)
+
+    Parameters
+    ----------
+    ra1 (float array)
+        The ra values of the first points
+    ra2 (float array)
+        The ra values of the second points
+    dec1 (float array)
+        The dec values of the first points
+    dec2 (float array)
+        The dec values of the second points
+
+    Returns
+    -------
+    dist (float array)
+        The angular distance between the points, in degrees
+
+    """
+
+    ddec = _np.radians(dec2-dec1)
+    dra = _np.radians(ra2-ra1)
+    a = _np.sin(ddec/2) * _np.sin(ddec/2) + _np.cos(_np.radians(dec1)) * _np.cos(_np.radians(dec2)) * _np.sin(dra/2) * _np.sin(dra/2)
+    c = 2 * _np.arctan2(_np.sqrt(a), _np.sqrt(1-a))
+    return c*180.0/_np.pi
+
+
+def BadPos(cat):
+    """
+    Get objects of large astrometric color (windowed offsets between g and i band)
+
+    Parameters
+    ----------
+    cat (structured array)
+        The data array
+
+    Returns
+    -------
+    cut (bool array)
+        An array where the entries that are True are the bad ones
+    """
+
+    offset = 3600.0 * AngularDistance(cat['alphawin_j2000_g'], cat['alphawin_j2000_i'], cat['deltawin_j2000_g'], cat['deltawin_j2000_i'])
+    c = (cat['fluxerr_auto_g'] > 0)
+    s2n = _np.zeros(len(cat), dtype=_np.float32)
+    s2n[c] = cat['flux_auto_g'][c] / cat['fluxerr_auto_g'][c]
+
+    bad = _np.zeros(len(cat), dtype=_np.int16)
+    cut = (s2n > 5) & (_np.fabs(offset) > 1.0)
+
+    return cut
