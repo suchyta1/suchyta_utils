@@ -427,7 +427,7 @@ def UniformRandom(size, ramin=0, ramax=360, decmin=-90, decmax=90):
 
     Returns
     -------
-    (ra, dec) (float arrays)
+    [ra, dec] (float arrays)
         The random positions
     """
 
@@ -436,4 +436,4 @@ def UniformRandom(size, ramin=0, ramax=360, decmin=-90, decmax=90):
     tmax = _np.cos( _np.radians(90.0 - decmin) )
     theta = _np.degrees( _np.arccos( _np.random.uniform(tmin,tmax, size) ) )
     dec = 90.0 - theta
-    return ra, dec 
+    return [ra, dec]
