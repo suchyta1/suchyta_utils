@@ -406,3 +406,34 @@ def BadPos(cat):
     cut = (s2n > 5) & (_np.fabs(offset) > 1.0)
 
     return cut
+
+
+def UniformRandom(size, ramin=0, ramax=360, decmin=-90, decmax=90):
+    """
+    Populate uniform randoms on a sphere. The default generates over the whole sphere, and the ra/dec min/max parameters let you choose only a subregion.
+
+    Parameters
+    ----------
+    size (int)
+        Number of random points to generate
+    ramin (float)
+        Set a minimum RA (degress) for the region in which to generate points
+    ramax (float)
+        Set a maximum RA (degress) for the region in which to generate points
+    decmin (float)
+        Set a minimum DEC (degress) for the region in which to generate points
+    decmax (float)
+        Set a maximum DEC (degress) for the region in which to generate points
+
+    Returns
+    -------
+    (ra, dec) (float arrays)
+        The random positions
+    """
+
+    ra = _np.random.uniform(ramin,ramax, size)
+    tmin = _np.cos( _np.radians(90.0 - decmax) )
+    tmax = _np.cos( _np.radians(90.0 - decmin) )
+    theta = _np.degrees( _np.arccos( _np.random.uniform(tmin,tmax, size) ) )
+    dec = 90.0 - theta
+    return ra, dec 
