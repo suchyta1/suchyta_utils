@@ -77,3 +77,5 @@ def Scatter(*args):
         return _mpif._scatter(args[0])
     else:
         return [_mpif._scatter(arg) for arg in args]
+
+

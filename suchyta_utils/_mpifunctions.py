@@ -18,7 +18,18 @@ def _gather(arr):
     
     if MPI.COMM_WORLD.Get_rank()==0:
         arr = np.array(arr)
+        
+        """
+        isarr = (type(arr).__module__ == np.__name__)
+        try:
+            len(arr[0])
+            islen = True
+        except:
+            islen = False
+        reshape = (isarr and islen)
+        """
 
+        #if (arr.ndim > 1) | (reshape):
         if (arr.ndim > 1) | ((type(arr).__module__ == np.__name__) and (type(arr[0]).__module__ == np.__name__)):
             dt = arr[0].dtype
             size = arr[0].ndim
