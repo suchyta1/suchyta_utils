@@ -115,6 +115,22 @@ def NTicks(ax, nxticks=None, nyticks=None):
         ax.xaxis.set_major_locator( _mpl.ticker.MaxNLocator(nbins=(nxticks-1)) )
 
 
+class Offset():
+
+    def __init__(self, thing, by, log=False):
+        if log:
+            self.new = _np.log10(thing) + by
+            self.new = _np.power(10, self.new)
+        else:
+            self.new = thing + by
+
+    def __enter__(self):
+        return self.new
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+
 def OffsetX(r, offset=0, log=False):
     if log:
         newr = _np.log10(r)
