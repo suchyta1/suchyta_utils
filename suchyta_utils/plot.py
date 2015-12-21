@@ -187,7 +187,7 @@ def _lon2RA(lon):
     return "%d:%sh" % (hours, minutes)
 
 
-def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, f=_getCountLocation, extrakwargs={} ):
+def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, f=_getCountLocation, noplot=False, extrakwargs={} ):
     if fig is None:
         fig, ax = plt.subplots(1,1, figsize=(6.5*nside/512,6*nside/512))
     if ax is None:
@@ -198,16 +198,6 @@ def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fa
     w = r * _np.cos(_np.radians(center[1])) * _np.radians(dims[0])
 
     m = _Basemap(projection='aea', width=w, height=h, lat_0=center[1], lon_0=center[0], ax=ax)
-    bc, lat, lon = f(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest, **extrakwargs)
-    x,y  = m(lon, lat)
-
-    if vmin is None:
-        vmin = _np.amin(bc)
-    if vmax is None:
-        vmax = _np.amax(bc)
-    sc = m.scatter(x,y,c=bc, linewidths=0, s=size, marker='s', vmin=vmin, vmax=vmax, rasterized=True, cmap=_cm.YlOrRd, ax=ax)
-
-
     if rafmt=='h':
         m.drawmeridians(meridians,labels=[0,0,0,1], fmt=_Lon2RA, linewidth=0.5)
     elif rafmt=='d':
@@ -220,6 +210,17 @@ def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fa
         m.drawparallels(parallels,labels=[1,0,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(xoffset)))
 
 
+    if noplot:
+        return m
+    bc, lat, lon = f(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest, **extrakwargs)
+    x,y  = m(lon, lat)
+
+    if vmin is None:
+        vmin = _np.amin(bc)
+    if vmax is None:
+        vmax = _np.amax(bc)
+
+    sc = m.scatter(x,y,c=bc, linewidths=0, s=size, marker='s', vmin=vmin, vmax=vmax, rasterized=True, cmap=_cm.YlOrRd, ax=ax)
     cb = m.colorbar(sc,"right", size="3%", pad='0%')
     if clabel is not None:
         cb.set_label(clabel)
@@ -227,7 +228,7 @@ def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fa
     cb.solids.set_edgecolor("face")
 
 
-def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9 ):
+def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, noplot=False ):
     """
     Make a number density plot, showing the map in equal-area projection.
     This function uses :mod:`mpl_toolkits.basemap`, but I find that syntax terribly non-convenient and prefer the syntax here.
@@ -283,7 +284,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
 
     """
 
-    _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getCountLocation, size=size, extrakwargs={} )
+    return _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getCountLocation, size=size, noplot=noplot, extrakwargs={} )
 
 
 def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, map=None ):
@@ -341,5 +342,6 @@ def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, paral
 
     """
     nside = _hp.npix2nside(map.size)
-    _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getMapLocation, size=9, extrakwargs={'map':map} )
+    return _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getMapLocation, size=9, extrakwargs={'map':map} )
+
 
