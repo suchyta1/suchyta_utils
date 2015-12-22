@@ -7,6 +7,7 @@ import numpy as _np
 import esutil as _es
 import copy as _copy
 import numpy.lib.recfunctions as _rec
+from sklearn.neighbors import NearestNeighbors as _NN
 
 
 def _DefineKwargs(kwargs):
@@ -437,3 +438,69 @@ def UniformRandom(size, ramin=0, ramax=360, decmin=-90, decmax=90):
     theta = _np.degrees( _np.arccos( _np.random.uniform(tmin,tmax, size) ) )
     dec = 90.0 - theta
     return [ra, dec]
+
+
+
+def ReweightMatch(keys=None, matchto=None, reweight=None, nn=100):
+    """
+    Find the weights that match one sample to another, using a nearest neighbor calculation.
+
+    Parameters
+    ----------
+    keys (str array)
+        Sequence of what fields to perform the reweighting
+    matchto (structured array)
+        The data you are matching to (which will not change)
+    reweight (structured array)
+        The data you are going to reweight (which will be resampled)
+    nn (int)
+        Number of nearest neighbors to query
+
+    Returns
+    -------
+    weight (float array)
+        The weights for resampling
+    """
+
+    if keys is None:
+        raise Exception('have to match something!')
+
+    truthSample_arr = _np.zeros( (len(matchto), len(keys)) )
+    matchSample_arr = _np.zeros( (len(reweight), len(keys)) )
+    
+    for i in range(len(keys)):
+        truthSample_arr[:,i] =  matchto[keys[i]]
+        matchSample_arr[:,i] =  reweight[keys[i]]
+
+    NP = _calcNN(nn, truthSample_arr, matchSample_arr)
+    bad = (NP <= 1)
+    wts = NP * 1./nn
+    wts[bad] = 0.
+
+    return wts
+
+
+def _calcNN(Nnei, magP, magT):
+
+    # Find Nnei neighbors around each point
+    # in the training sample.
+    # Nnei+1 because [0] is the point itself.
+    nbrT        = _NN(n_neighbors=Nnei+1, n_jobs=-1).fit(magT)
+    distT, indT = nbrT.kneighbors(magT, n_neighbors=Nnei+1)
+   
+    # Find how many neighbors are there around 
+    # each point in the photometric sample 
+    # within the radius that contains Nnei in 
+    # the training one. 
+    nbrP        = _NN(radius=distT[:, Nnei], n_jobs=-1).fit(magP)
+    distP, indP = nbrP.radius_neighbors(magT, radius=distT[:, Nnei])
+
+
+    # Get the number of photometric neighbors
+    NP = []
+    for i in range(len(distP)):
+        NP.append(len(distP[i])-1)
+
+    NP = _np.asarray(NP)
+    return NP
+
