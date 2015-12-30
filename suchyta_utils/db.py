@@ -195,7 +195,7 @@ def SearchTables(tables, key):
     """
     ts = []
     for name in tables:
-        if name.find(key)!=-1:
+        if name.upper().find(key.upper())!=-1:
             ts.append(name)
     return ts
 
