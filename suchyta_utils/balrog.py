@@ -8,6 +8,8 @@ import esutil as _es
 import copy as _copy
 import os as _os
 import sys as _sys
+import re as _re
+import glob as _glob
 import numpy.lib.recfunctions as _rec
 from sklearn.neighbors import NearestNeighbors as _NN
 
@@ -681,5 +683,33 @@ class Y1Processing(object):
             for l in load:
                 self.Load(l, prints=prints)
 
+            self.systematicsdir = None
             if systematics is not None:
                 self.systematicsdir = _os.path.join(dir, systematics, 'nside4096_oversamp4')
+                if not _os.path.exists(self.systematicsdir):
+                    print 'WARNING: systematics directory does not exist: %s'%(self.systematicsdir)
+                else:
+                    files = _glob.glob('%s/*.fits.gz'%(self.systematicsdir))
+                    self._LookFor(files, '__mean.fits.gz$', 'meanfiles')
+                    self._LookFor(files, '_coaddweights3_mean.fits.gz$', 'weightfiles')
+                    self._LookFor(files, '__mean.fits.gz$|_coaddweights3_mean.fits.gz$', 'otherfiles', invert=True)
+
+
+    def _LookFor(self, files, reg, ftype, invert=False):
+        self.__setattr__(ftype, {})
+        bands = ['g','r','i','z','Y']
+        r = _re.compile(reg)
+        rr = {}
+        for band in bands:
+            rr[band] = _re.compile('_band_%s_'%(band))
+            self.__dict__[ftype][band] = []
+
+        for file in files:
+            s = r.search(file)
+            if ( (s is not None) and (not invert) ) or ( (s is None) and (invert) ) :
+                for band in bands:
+                    ss = rr[band].search(file)
+                    if ss is not None:
+                        self.__dict__[ftype][band].append(file)
+                        break
+
