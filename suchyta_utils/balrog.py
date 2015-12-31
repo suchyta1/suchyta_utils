@@ -534,7 +534,7 @@ class Y1Dataset(object):
 
     def UsualMasking(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', cond='=', val=0):
         self.ApplyFootprint(ra=ra, dec=dec)
-        self.ApplyMask(ra=ra, dec=dec, cond='=', val=0)
+        self.ApplyMask(ra=ra, dec=dec, cond=cond, val=val)
 
     def BenchmarkMasking(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
         self.UsualMasking(ra=ra, dec=dec)
@@ -588,30 +588,23 @@ class Y1Dataset(object):
         self.BenchmarkQualityCuts()
 
 
-    def __init__(self, data, existing=None, dir=None, subset='wide', version='1.0.2'):
+    def __init__(self, data, processing=None):
         self.data = data
 
-        if existing is not None:
+        if processing is not None:
             done = self.__dict__.keys()
-            for key in existing.__dict__.keys():
+            for key in processing.__dict__.keys():
                 if key not in done:
-                    self.__setattr__(key, existing.__dict__[key])
-            
-            '''
-            self.dir = existing.dir
-            self.footprint_file = existing.footprint_file 
-            self.footprint = existing.footprint
-            self.badmask_file = existing.badmask_file
-            self.badmask = existing.badmask
-            self.depth_file = existing.depth_file
-            self.depth = existing.depth
-            self.slrcode = existing.slrcode
-            self.slrfits = existing.slrfits
-            self.slr = existing.slr
-            '''
+                    self.__setattr__(key, processing.__dict__[key])
+        else:
+            print 'WARNING: did not give an object for masking, SLR, etc.'
 
-        elif dir is None:
-            print 'WARNING: must associate either a directory or an existing object to get the mask(s), SLR, etc.'
+
+class Y1Processing(object):
+
+    def __init__(self, dir=None, version='1.0.2', subset='wide'):
+        if dir is None:
+            print 'WARNING: must specify a directory where the the mask(s), SLR, etc. live. Nothing done.'
 
         else:
             self.version = version
