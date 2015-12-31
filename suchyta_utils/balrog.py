@@ -7,6 +7,7 @@ import numpy as _np
 import esutil as _es
 import copy as _copy
 import os as _os
+import sys as _sys
 import numpy.lib.recfunctions as _rec
 from sklearn.neighbors import NearestNeighbors as _NN
 
@@ -558,19 +559,35 @@ class Y1Dataset(object):
         self.ApplySLR(key='mag_auto')
         self.ApplyModest(1)
 
-    def BenchmarkQualityCuts(self):
+    def GoldColorCuts(self):
+        # Crazy Colors
+        gr = self.data['mag_auto_g'] - self.data['mag_auto_r']
+        ri = self.data['mag_auto_r'] - self.data['mag_auto_i']
+        iz = self.data['mag_auto_i'] - self.data['mag_auto_z']
+        self.data = self.data[ (gr > -1) & (gr < 4) & (ri > -1) & (ri < 4) & (iz > -1) & (iz < 4) ]
+
+    def BenchmarkColorCuts(self):
         # Crazy Colors
         gr = self.data['mag_auto_g'] - self.data['mag_auto_r']
         ri = self.data['mag_auto_r'] - self.data['mag_auto_i']
         iz = self.data['mag_auto_i'] - self.data['mag_auto_z']
         self.data = self.data[ (gr > -1) & (gr < 3) & (ri > -1) & (ri < 2.5) & (iz > -1) & (iz < 2) ]
 
-        # Cuts to do the flags_gold that I can. (BM color cuts supercede the gold ones. Can't really do BBJ.)
+    def GoldlikeFlagCuts(self):
         for band in ['g','r','i','z']:
             cut = (self.data['flags_%s'%(band)] > 3)
             self.data = self.data[-cut]
         bad = BadPos(self.data)
         self.data = self.data[-bad]
+
+    def BenchmarkQualityCuts(self):
+        # Cuts to do the flags_gold that I can. (BM color cuts supercede the gold ones. Can't really do BBJ.)
+        self.BenchmarkColorCuts()
+        self.GoldlikeFlagCuts()
+
+    def PseudoBenchmarkQualityCuts(self):
+        self.GoldColorCuts()
+        self.GoldlikeFlagCuts()
 
 
     def BenchmarkGalaxies(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
@@ -585,7 +602,7 @@ class Y1Dataset(object):
     def PseudoBenchmarkGalaxies(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
         self.UsualMasking(ra=ra, dec=dec)
         self.ModestGalaxies()
-        self.BenchmarkQualityCuts()
+        self.PseudoBenchmarkQualityCuts()
 
 
     def __init__(self, data, processing=None):
@@ -602,37 +619,36 @@ class Y1Dataset(object):
 
 class Y1Processing(object):
 
-    def __init__(self, dir=None, version='1.0.2', subset='wide'):
-        if dir is None:
-            print 'WARNING: must specify a directory where the the mask(s), SLR, etc. live. Nothing done.'
+    def Load(self, key, prints=False):
+        self.__setattr__(key, None)
+        if not prints:
+            so = _sys.stdout
+            se = _sys.stderr
+            f = open(_os.devnull, 'w')
 
-        else:
-            self.version = version
-            self.dir = dir
-            self.subset = subset
-            self.footprint_file = _os.path.join(self.dir, 'y1a1_gold_%s_%s_footprint_4096.fits.gz' %(self.version,self.subset))
-            self.badmask_file = _os.path.join(self.dir, 'y1a1_gold_%s_%s_badmask_4096.fits.gz'%(self.version,self.subset))
-            self.depth_file = _os.path.join(self.dir, 'y1a1_gold_%s_%s_auto_nside4096_i_10sigma.fits.gz'%(self.version,self.subset))
+        if key in ['footprint','badmask','depth']:
+            fkey = '%s_file'%(key)
+            if key in ['footprint','badmask']:
+                e = '%s_4096'%(key)
+            else:
+                e = 'auto_nside4096_i_10sigma'
+
+            self.__setattr__(fkey, _os.path.join(self.dir, 'y1a1_gold_%s_%s_%s.fits.gz' %(self.version,self.subset,e)) )
+            if not _os.path.exists(self.__dict__[fkey]):
+                print 'WARNING: the %s file does not exist for your given directory, subset, and version: %s'%(key, self.__dict__[fkey])
+            else:
+                if not prints:
+                    _sys.stdout = f
+                    _sys.stderr = f
+                self.__setattr__(key, _hp.GetHPMap(self.__dict__[fkey]))
+                if not prints:
+                    _sys.stdout = so
+                    _sys.stderr = se
+
+
+        elif key=='slr':
             self.slrcode = _os.path.join(self.dir, 'y1a1_slr_shiftmap.py')
             self.slrfits = _os.path.join(self.dir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(self.subset))
-            
-            if not _os.path.exists(self.footprint_file):
-                print 'WARNING: the footprint file does not exist for your given directory, subset, and version: %s'%(self.footprint_file)
-                self.footprint = None
-            else:
-                self.footprint = _hp.GetHPMap(self.footprint_file)
-
-            if not _os.path.exists(self.badmask_file):
-                print 'WARNING: the bad mask file does not exist for your given directory, subset, and version: %s'%(self.badmask_file)
-                self.badmask = None
-            else:
-                self.badmask = _hp.GetHPMap(self.badmask_file)
-
-            if not _os.path.exists(self.depth_file):
-                print 'WARNING: the depth mask file does not exist for your given directory, subset, and version: %s'%(self.depth_file)
-                self.depth = None
-            else:
-                self.depth = _hp.GetHPMap(self.depth_file)
 
             noslr = False
             if not _os.path.exists(self.slrcode):
@@ -643,7 +659,27 @@ class Y1Processing(object):
                 noslr = True
            
             if not noslr:
+                if not prints:
+                    _sys.stdout = f
+                    _sys.stderr = f
                 self.slr = _slr.SLR(release='y1a1', area=self.subset, slrdir=self.dir)
-            else:
-                self.slr = None
+                if not prints:
+                    _sys.stdout = so
+                    _sys.stderr = se
 
+
+    def __init__(self, dir=None, version='1.0.2', subset='wide', load=['footprint','badmask','depth','slr'], systematics=None, prints=False):
+
+        if dir is None:
+            print 'WARNING: must specify a directory where the the mask(s), SLR, etc. live. Nothing done.'
+
+        else:
+            self.version = version
+            self.dir = dir
+            self.subset = subset
+
+            for l in load:
+                self.Load(l, prints=prints)
+
+            if systematics is not None:
+                self.systematicsdir = _os.path.join(dir, systematics, 'nside4096_oversamp4')
