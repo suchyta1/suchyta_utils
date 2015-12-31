@@ -6,8 +6,12 @@
 import numpy as _np
 import esutil as _es
 import copy as _copy
+import os as _os
 import numpy.lib.recfunctions as _rec
 from sklearn.neighbors import NearestNeighbors as _NN
+
+import suchyta_utils.hp as _hp
+import suchyta_utils.slr as _slr
 
 
 def _DefineKwargs(kwargs):
@@ -503,4 +507,150 @@ def _calcNN(Nnei, magP, magT):
 
     NP = _np.asarray(NP)
     return NP
+
+
+
+
+class Y1Dataset(object):
+
+    def ApplyFootprint(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
+        if self.footprint is not None:
+            self.data = _hp.ApplyMask(mask=self.footprint[0], nest=self.footprint[1], cat=self.data, ra=ra, dec=dec, val=1, cond='>=')
+        else:
+            print 'No footprint to apply'
+
+    def ApplyMask(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', cond='=', val=0):
+        if self.badmask is not None:
+            self.data = _hp.ApplyMask(mask=self.badmask[0], nest=self.badmask[1], cat=self.data, ra=ra, dec=dec, val=val, cond=cond)
+        else:
+            print 'No bad mask to apply'
+
+    def ApplyDepth(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', cond='>', val=22):
+        if self.depth is not None:
+            self.data = _hp.ApplyMask(mask=self.depth[0], nest=self.depth[1], cat=self.data, ra=ra, dec=dec, val=val, cond=cond)
+        else:
+            print 'No depth mask to apply'
+
+
+    def UsualMasking(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', cond='=', val=0):
+        self.ApplyFootprint(ra=ra, dec=dec)
+        self.ApplyMask(ra=ra, dec=dec, cond='=', val=0)
+
+    def BenchmarkMasking(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
+        self.UsualMasking(ra=ra, dec=dec)
+        self.ApplyDepth(cond='>', val=22)
+
+
+    def ApplySLR(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bands=['g','r','i','z','y'], key='mag_auto'):
+        if self.slr is not None:
+            for band in bands:
+                shift = self.slr.GetMagShifts(band, self.data[ra], self.data[dec])
+                self.data['{1}_{0}'.format(band,key)] = self.data['{1}_{0}'.format(band,key)] + shift
+        else:
+            print 'No SLR to apply'
+
+    def ApplyModest(self, val):
+        modest = Modest(self.data, release='y1a1')
+        self.data = self.data[ modest==val ]
+
+
+    def ModestGalaxies(self):
+        self.ApplySLR(key='mag_auto')
+        self.ApplyModest(1)
+
+    def BenchmarkQualityCuts(self):
+        # Crazy Colors
+        gr = self.data['mag_auto_g'] - self.data['mag_auto_r']
+        ri = self.data['mag_auto_r'] - self.data['mag_auto_i']
+        iz = self.data['mag_auto_i'] - self.data['mag_auto_z']
+        self.data = self.data[ (gr > -1) & (gr < 3) & (ri > -1) & (ri < 2.5) & (iz > -1) & (iz < 2) ]
+
+        # Cuts to do the flags_gold that I can. (BM color cuts supercede the gold ones. Can't really do BBJ.)
+        for band in ['g','r','i','z']:
+            cut = (self.data['flags_%s'%(band)] > 3)
+            self.data = self.data[-cut]
+        bad = BadPos(self.data)
+        self.data = self.data[-bad]
+
+
+    def BenchmarkGalaxies(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
+        self.BenchmarkMasking(ra=ra, dec=dec)
+        self.ModestGalaxies()
+        self.BenchmarkQualityCuts()
+
+        # 'Complete'
+        self.data = self.data[ (self.data['mag_auto_i'] > 17.5) & (self.data['mag_auto_i'] < 22) ]
+
+
+    def PseudoBenchmarkGalaxies(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
+        self.UsualMasking(ra=ra, dec=dec)
+        self.ModestGalaxies()
+        self.BenchmarkQualityCuts()
+
+
+    def __init__(self, data, existing=None, dir=None, subset='wide', version='1.0.2'):
+        self.data = data
+
+        if existing is not None:
+            done = self.__dict__.keys()
+            for key in existing.__dict__.keys():
+                if key not in done:
+                    self.__setattr__(key, existing.__dict__[key])
+            
+            '''
+            self.dir = existing.dir
+            self.footprint_file = existing.footprint_file 
+            self.footprint = existing.footprint
+            self.badmask_file = existing.badmask_file
+            self.badmask = existing.badmask
+            self.depth_file = existing.depth_file
+            self.depth = existing.depth
+            self.slrcode = existing.slrcode
+            self.slrfits = existing.slrfits
+            self.slr = existing.slr
+            '''
+
+        elif dir is None:
+            print 'WARNING: must associate either a directory or an existing object to get the mask(s), SLR, etc.'
+
+        else:
+            self.version = version
+            self.dir = dir
+            self.subset = subset
+            self.footprint_file = _os.path.join(self.dir, 'y1a1_gold_%s_%s_footprint_4096.fits.gz' %(self.version,self.subset))
+            self.badmask_file = _os.path.join(self.dir, 'y1a1_gold_%s_%s_badmask_4096.fits.gz'%(self.version,self.subset))
+            self.depth_file = _os.path.join(self.dir, 'y1a1_gold_%s_%s_auto_nside4096_i_10sigma.fits.gz'%(self.version,self.subset))
+            self.slrcode = _os.path.join(self.dir, 'y1a1_slr_shiftmap.py')
+            self.slrfits = _os.path.join(self.dir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(self.subset))
+            
+            if not _os.path.exists(self.footprint_file):
+                print 'WARNING: the footprint file does not exist for your given directory, subset, and version: %s'%(self.footprint_file)
+                self.footprint = None
+            else:
+                self.footprint = _hp.GetHPMap(self.footprint_file)
+
+            if not _os.path.exists(self.badmask_file):
+                print 'WARNING: the bad mask file does not exist for your given directory, subset, and version: %s'%(self.badmask_file)
+                self.badmask = None
+            else:
+                self.badmask = _hp.GetHPMap(self.badmask_file)
+
+            if not _os.path.exists(self.depth_file):
+                print 'WARNING: the depth mask file does not exist for your given directory, subset, and version: %s'%(self.depth_file)
+                self.depth = None
+            else:
+                self.depth = _hp.GetHPMap(self.depth_file)
+
+            noslr = False
+            if not _os.path.exists(self.slrcode):
+                print 'WARNING: SLR python file does not exist for your given directory and subset: %s'%(self.slrcode)
+                noslr = True
+            if not _os.path.exists(self.slrfits):
+                print 'WARNING: SLR FITS file does not exist for your given directory and subset: %s'%(self.slrfits)
+                noslr = True
+           
+            if not noslr:
+                self.slr = _slr.SLR(release='y1a1', area=self.subset, slrdir=self.dir)
+            else:
+                self.slr = None
 
