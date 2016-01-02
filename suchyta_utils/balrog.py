@@ -3,13 +3,15 @@
 
 """
 
-import numpy as _np
+import healpy as _healpy
 import esutil as _es
 import copy as _copy
 import os as _os
 import sys as _sys
 import re as _re
 import glob as _glob
+
+import numpy as _np
 import numpy.lib.recfunctions as _rec
 from sklearn.neighbors import NearestNeighbors as _NN
 
@@ -513,8 +515,150 @@ def _calcNN(Nnei, magP, magT):
 
 
 
+class Y1Processing(object):
 
-class Y1Dataset(object):
+    def Load(self, key, prints=False):
+        self.__setattr__(key, None)
+        if not prints:
+            so = _sys.stdout
+            se = _sys.stderr
+            f = open(_os.devnull, 'w')
+
+        if key in ['footprint','badmask','depth']:
+            fkey = '%s_file'%(key)
+            if key in ['footprint','badmask']:
+                e = '%s_4096'%(key)
+            else:
+                e = 'auto_nside4096_i_10sigma'
+
+            self.__setattr__(fkey, _os.path.join(self.dir, 'y1a1_gold_%s_%s_%s.fits.gz' %(self.version,self.subset,e)) )
+            if not _os.path.exists(self.__dict__[fkey]):
+                print 'WARNING: the %s file does not exist for your given directory, subset, and version: %s'%(key, self.__dict__[fkey])
+            else:
+                if not prints:
+                    _sys.stdout = f
+                    _sys.stderr = f
+                self.__setattr__(key, _hp.GetHPMap(self.__dict__[fkey]))
+                if not prints:
+                    _sys.stdout = so
+                    _sys.stderr = se
+
+
+        elif key=='slr':
+            self.slrcode = _os.path.join(self.dir, 'y1a1_slr_shiftmap.py')
+            self.slrfits = _os.path.join(self.dir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(self.subset))
+
+            noslr = False
+            if not _os.path.exists(self.slrcode):
+                print 'WARNING: SLR python file does not exist for your given directory and subset: %s'%(self.slrcode)
+                noslr = True
+            if not _os.path.exists(self.slrfits):
+                print 'WARNING: SLR FITS file does not exist for your given directory and subset: %s'%(self.slrfits)
+                noslr = True
+           
+            if not noslr:
+                if not prints:
+                    _sys.stdout = f
+                    _sys.stderr = f
+                self.slr = _slr.SLR(release='y1a1', area=self.subset, slrdir=self.dir)
+                if not prints:
+                    _sys.stdout = so
+                    _sys.stderr = se
+   
+
+    def FindSystematics(self, systematics):
+        self.systematicsdir = _os.path.join(self.dir, systematics, 'nside4096_oversamp4')
+        if not _os.path.exists(self.systematicsdir):
+            print 'WARNING: systematics directory does not exist: %s'%(self.systematicsdir)
+        else:
+            files = _glob.glob('%s/*.fits.gz'%(self.systematicsdir))
+            bands = ['g','r','i','z','Y']
+            rr = {}
+            for band in bands:
+                rr[band] = _re.compile('_band_%s_'%(band))
+            
+            found = [ [], [], [], [] ]
+            flen = [ 0, 0, 0, 0 ]
+            self._LookFor(files, '_band_.*?_oversamp.*?_(.*?)(\d*?)__mean\.fits\.gz$', rr, 'mean', found, flen, bands=bands)
+            self._LookFor(files, '_band_.*?_oversamp.*?_(.*?)(\d*?)_coaddweight.*?_mean\.fits\.gz$', rr, 'weight', found, flen, bands=bands)
+            self._LookFor(files, '_band_.*?_oversamp.*?_(.*?)(\d*?)__.*?\.fits\.gz$', rr, '', found, flen, bands=bands)
+
+            self.systematics = _np.zeros(len(found[0]), dtype=[('band','|S%i'%(flen[0])), ('avgtype','|S%i'%(flen[1])), ('file','|S%i'%(flen[2])), ('key','|S%i'%(flen[3]))] )
+            self.systematics['band'] = found[0]
+            self.systematics['avgtype'] = found[1]
+            self.systematics['file'] = found[2]
+            self.systematics['key'] = found[3]
+
+    @property
+    def SystematicKeys(self):
+        return _np.unique(self.systematics['key'])
+
+    @property
+    def SystematicsDict(self):
+        keys = self.SystematicKeys
+        d = {}
+        for key in keys:
+            d[key] = {}
+            match = (self.systematics['key']==key)
+            m = self.systematics[match]
+            bands = _np.unique(m['band'])
+            avgtypes = _np.unique(m['avgtype'])
+            d[key]['bands'] = list(bands)
+            d[key]['avgtypes'] = list(avgtypes)
+        return d
+
+    def _GetSystematicFile(self, key, band, avgtype):
+        if self.systematics is None:
+            return None
+        match = (self.systematics['key']==key) & (self.systematics['band']==band) & (self.systematics['avgtype']==avgtype)
+        file = self.systematics[match][0]['file']
+        return file
+
+
+    def _LookFor(self, files, reg, rr, kind, found, flen, bands=['g','r','i','z','Y']):
+        r = _re.compile(reg)
+        for file in files:
+            s = r.search(file)
+            if s is not None:
+                for band in bands:
+                    ss = rr[band].search(file)
+                    if (ss is not None) and (file not in found[2]):
+                        g = s.group(1)
+                        things = [band, kind, file, g]
+                        lowers = [True, True, False, True]
+
+                        for i in range(len(things)):
+                            f = things[i]
+                            if lowers[i]:
+                                f = things[i].lower()
+                            found[i].append(f)
+                            size = len(things[i])
+                            if  (size > flen[i]):
+                                flen[i] = size
+                        break
+
+
+    def __init__(self, dir=None, version='1.0.2', subset='wide', load=['footprint','badmask','depth','slr'], systematics=None, prints=False):
+
+        if dir is None:
+            print 'WARNING: must specify a directory where the the mask(s), SLR, etc. live. Nothing done.'
+
+        else:
+            self.version = version
+            self.dir = dir
+            self.subset = subset
+
+            for l in load:
+                self.Load(l, prints=prints)
+
+            self.systematicsdir = None
+            self.systematics = None
+            if systematics is not None:
+                self.FindSystematics(systematics)
+
+
+
+class Y1Dataset(Y1Processing):
 
     def ApplyFootprint(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
         if self.footprint is not None:
@@ -606,110 +750,101 @@ class Y1Dataset(object):
         self.ModestGalaxies()
         self.PseudoBenchmarkQualityCuts()
 
+    
+    def _FindSysFile(self, key=None, band=None, avgtype=None):
+        if key is None:
+            print 'Must give a key. Nothing done.'
+            return None
+        else:
+            if key not in self.SystematicKeys:
+                print 'key=%s, is not in list of found systematic keys=%s' %(key,str(self.systematics.dtype.names))
+                return None
+
+        if band is None:
+            print 'Must give a band. Nothing done.'
+            return None
+        else:
+            bands = ['g','r','i','z','y']
+            band = band.lower()
+            if band not in bands:
+                print 'Band must be one of %s. You gave %s'%(str(bands, band))
+                return None
+
+        if avgtype is None:
+            match = (self.systematics['band']==band) & (self.systematics['key']==key)
+            atype = self.systematics[match]['avgtype']
+            if len(atype)==1:
+                avgtype = atype[0]
+            elif len(atype)==2:
+                avgtype = 'weight'
+            else:
+                print 'Something weird happened.'
+                return None
+
+        atypes = ['mean','weight','']
+        if avgtype not in atypes:
+            print 'avgtype must be in %s. You gave %s'%(str(atypes),avgtype)
+            return None
+
+        file = self._GetSystematicFile(key, band, avgtype)
+        if file is None:
+            print 'Could not find any systematics files.'
+            return None
+
+        return file
+
+
+    def SystematicN(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None):
+        file = self._FindSysFile(key=key, band=band, avgtype=avgtype)
+        if file is None:
+            return None, None, None
+
+        map, nest = _hp.GetBorisMap(file)
+        mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=self.data, ra=ra, dec=dec)
+        pixel = _hp.RaDec2Healpix(nside=_healpy.npix2nside(map.size), nest=nest, cat=self.data, ra=ra, dec=dec)
+        npixel = len( _np.unique(pixel) )
+        navg = float(len(pixel)) / npixel
+
+        if bins is None:
+            left = _np.percentile(mapval, 2)
+            right = _np.percentile(mapval, 98)
+            bins = _np.linspace(left, right, num=11)
+        cent = (bins[1:]+bins[:-1])/2.0
+
+        val = _np.zeros(len(cent))
+        dig = _np.digitize(mapval, bins)
+        for i in range(len(val)):
+            cut = (dig==(i+1))
+            n = _np.sum(cut)
+            npix = len(_np.unique(pixel[cut]))
+            val[i] = (float(n) / npix) / navg
+        return cent, val
+
+
+    def SystematicHistogram(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None):
+        file = self._FindSysFile(key=key, band=band, avgtype=avgtype)
+        if file is None:
+            return None, None, None
+        map, nest = _hp.GetBorisMap(file)
+        mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=self.data, ra=ra, dec=dec)
+
+        if bins is None:
+            left = _np.percentile(mapval, 2)
+            right = _np.percentile(mapval, 98)
+            bins = _np.linspace(left, right, num=26)
+        hist, bins = _np.histogram(mapval, bins=bins)
+        cent = (bins[1:]+bins[:-1])/2.0
+        return cent, hist, bins
+
 
     def __init__(self, data, processing=None):
         self.data = data
+        keys = processing.__dict__.keys()
 
         if processing is not None:
             done = self.__dict__.keys()
-            for key in processing.__dict__.keys():
+            for key in keys:
                 if key not in done:
                     self.__setattr__(key, processing.__dict__[key])
         else:
             print 'WARNING: did not give an object for masking, SLR, etc.'
-
-
-class Y1Processing(object):
-
-    def Load(self, key, prints=False):
-        self.__setattr__(key, None)
-        if not prints:
-            so = _sys.stdout
-            se = _sys.stderr
-            f = open(_os.devnull, 'w')
-
-        if key in ['footprint','badmask','depth']:
-            fkey = '%s_file'%(key)
-            if key in ['footprint','badmask']:
-                e = '%s_4096'%(key)
-            else:
-                e = 'auto_nside4096_i_10sigma'
-
-            self.__setattr__(fkey, _os.path.join(self.dir, 'y1a1_gold_%s_%s_%s.fits.gz' %(self.version,self.subset,e)) )
-            if not _os.path.exists(self.__dict__[fkey]):
-                print 'WARNING: the %s file does not exist for your given directory, subset, and version: %s'%(key, self.__dict__[fkey])
-            else:
-                if not prints:
-                    _sys.stdout = f
-                    _sys.stderr = f
-                self.__setattr__(key, _hp.GetHPMap(self.__dict__[fkey]))
-                if not prints:
-                    _sys.stdout = so
-                    _sys.stderr = se
-
-
-        elif key=='slr':
-            self.slrcode = _os.path.join(self.dir, 'y1a1_slr_shiftmap.py')
-            self.slrfits = _os.path.join(self.dir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(self.subset))
-
-            noslr = False
-            if not _os.path.exists(self.slrcode):
-                print 'WARNING: SLR python file does not exist for your given directory and subset: %s'%(self.slrcode)
-                noslr = True
-            if not _os.path.exists(self.slrfits):
-                print 'WARNING: SLR FITS file does not exist for your given directory and subset: %s'%(self.slrfits)
-                noslr = True
-           
-            if not noslr:
-                if not prints:
-                    _sys.stdout = f
-                    _sys.stderr = f
-                self.slr = _slr.SLR(release='y1a1', area=self.subset, slrdir=self.dir)
-                if not prints:
-                    _sys.stdout = so
-                    _sys.stderr = se
-
-
-    def __init__(self, dir=None, version='1.0.2', subset='wide', load=['footprint','badmask','depth','slr'], systematics=None, prints=False):
-
-        if dir is None:
-            print 'WARNING: must specify a directory where the the mask(s), SLR, etc. live. Nothing done.'
-
-        else:
-            self.version = version
-            self.dir = dir
-            self.subset = subset
-
-            for l in load:
-                self.Load(l, prints=prints)
-
-            self.systematicsdir = None
-            if systematics is not None:
-                self.systematicsdir = _os.path.join(dir, systematics, 'nside4096_oversamp4')
-                if not _os.path.exists(self.systematicsdir):
-                    print 'WARNING: systematics directory does not exist: %s'%(self.systematicsdir)
-                else:
-                    files = _glob.glob('%s/*.fits.gz'%(self.systematicsdir))
-                    self._LookFor(files, '__mean.fits.gz$', 'meanfiles')
-                    self._LookFor(files, '_coaddweights3_mean.fits.gz$', 'weightfiles')
-                    self._LookFor(files, '__mean.fits.gz$|_coaddweights3_mean.fits.gz$', 'otherfiles', invert=True)
-
-
-    def _LookFor(self, files, reg, ftype, invert=False):
-        self.__setattr__(ftype, {})
-        bands = ['g','r','i','z','Y']
-        r = _re.compile(reg)
-        rr = {}
-        for band in bands:
-            rr[band] = _re.compile('_band_%s_'%(band))
-            self.__dict__[ftype][band] = []
-
-        for file in files:
-            s = r.search(file)
-            if ( (s is not None) and (not invert) ) or ( (s is None) and (invert) ) :
-                for band in bands:
-                    ss = rr[band].search(file)
-                    if ss is not None:
-                        self.__dict__[ftype][band].append(file)
-                        break
-
