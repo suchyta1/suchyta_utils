@@ -17,6 +17,7 @@ from sklearn.neighbors import NearestNeighbors as _NN
 
 import suchyta_utils.hp as _hp
 import suchyta_utils.slr as _slr
+import suchyta_utils.jk as _jk
 
 
 def _DefineKwargs(kwargs):
@@ -794,31 +795,33 @@ class Y1Dataset(Y1Processing):
         return file
 
 
-    def SystematicN(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None):
+
+    def SystematicN(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None, jk=None):
         file = self._FindSysFile(key=key, band=band, avgtype=avgtype)
         if file is None:
             return None, None, None
-
+        
+        autobin = False
         map, nest = _hp.GetBorisMap(file)
-        mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=self.data, ra=ra, dec=dec)
-        pixel = _hp.RaDec2Healpix(nside=_healpy.npix2nside(map.size), nest=nest, cat=self.data, ra=ra, dec=dec)
-        npixel = len( _np.unique(pixel) )
-        navg = float(len(pixel)) / npixel
-
         if bins is None:
+            mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=self.data, ra=ra, dec=dec)
             left = _np.percentile(mapval, 2)
             right = _np.percentile(mapval, 98)
             bins = _np.linspace(left, right, num=11)
+            autobin = True
         cent = (bins[1:]+bins[:-1])/2.0
 
-        val = _np.zeros(len(cent))
-        dig = _np.digitize(mapval, bins)
-        for i in range(len(val)):
-            cut = (dig==(i+1))
-            n = _np.sum(cut)
-            npix = len(_np.unique(pixel[cut]))
-            val[i] = (float(n) / npix) / navg
-        return cent, val
+        if jk is not None:
+            nc = _jk.SphericalJK(target=_NCalc, jkargs=self.data, jkargsby=[ra,dec], nojkargs=[map, nest, bins], nojkkwargs={'ra':ra,'dec':dec})
+            nc.DoJK(mpi=False, regions=jk)
+            results = nc.GetResults()
+            full = results['full']
+            it = results['jk']
+            cov = _GetCov(full, it)
+            return cent, full, cov
+        else:
+            val = _NCalc(self.data, map, nest, bins, ra=ra, dec=dec)
+            return cent, val
 
 
     def SystematicHistogram(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None):
@@ -848,3 +851,27 @@ class Y1Dataset(Y1Processing):
                     self.__setattr__(key, processing.__dict__[key])
         else:
             print 'WARNING: did not give an object for masking, SLR, etc.'
+
+
+def _NCalc(data, map, nest, bins, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
+    mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=data, ra=ra, dec=dec)
+    pixel = _hp.RaDec2Healpix(nside=_healpy.npix2nside(map.size), nest=nest, cat=data, ra=ra, dec=dec)
+    npixel = len( _np.unique(pixel) )
+    navg = float(len(pixel)) / npixel
+
+    val = _np.zeros(len(bins)-1)
+    dig = _np.digitize(mapval, bins)
+    for i in range(len(val)):
+        cut = (dig==(i+1))
+        n = _np.sum(cut)
+        npix = len(_np.unique(pixel[cut]))
+        val[i] = (float(n) / npix) / navg
+    return val
+
+
+def _GetCov(full, its):
+    njack = its.shape[0]
+    norm = (njack-1) / float(njack)
+    diff = its - _np.reshape(full, (1,full.shape[0]))
+    cov = _np.dot(diff.T, diff) * norm
+    return cov
