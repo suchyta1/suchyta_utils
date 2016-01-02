@@ -591,6 +591,12 @@ class Y1Processing(object):
             self.systematics['key'] = found[3]
 
     @property
+    def SystematicKeysAvgtypes(self):
+        arr = _rec.drop_fields(self.systematics, ['band','file'], usemask=False)
+        u = _np.unique(arr)
+        return [u['key'], u['avgtype']]
+
+    @property
     def SystematicKeys(self):
         return _np.unique(self.systematics['key'])
 
@@ -834,7 +840,7 @@ class Y1Dataset(Y1Processing):
         if bins is None:
             left = _np.percentile(mapval, 2)
             right = _np.percentile(mapval, 98)
-            bins = _np.linspace(left, right, num=26)
+            bins = _np.linspace(left, right, num=11)
         hist, bins = _np.histogram(mapval, bins=bins)
         cent = (bins[1:]+bins[:-1])/2.0
         return cent, hist, bins
