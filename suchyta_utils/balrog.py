@@ -759,6 +759,7 @@ class Y1Dataset(Y1Processing):
 
     
     def _FindSysFile(self, key=None, band=None, avgtype=None):
+        a = avgtype
         if key is None:
             print 'Must give a key. Nothing done.'
             return None
@@ -806,8 +807,9 @@ class Y1Dataset(Y1Processing):
         file = self._FindSysFile(key=key, band=band, avgtype=avgtype)
         if file is None:
             return None, None, None
-        
+       
         autobin = False
+        #print key, avgtype, file
         map, nest = _hp.GetBorisMap(file)
         if bins is None:
             mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=self.data, ra=ra, dec=dec)
