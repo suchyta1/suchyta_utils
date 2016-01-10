@@ -1,3 +1,15 @@
+"""
+Since we often don't know what else to do with errors, astronomers like to get `jackknife <https://en.wikipedia.org/wiki/Jackknife_resampling>`_ (JK) covariances.
+Many of us (including me) tend to work in angular coordinates. We get a bunch of RA and DECs -- coordinates on a unit sphere.
+:mod:`suchyta_utils.jk` provides a way to generate JK realizations for an arbitrary function, which takes data on the sphere as an arugment.
+The implementation uses `k-means clustering <https://en.wikipedia.org/wiki/K-means_clustering>`_ for region generation,
+using Erin Sheldon's `kmeans_radec module <https://github.com/esheldon/kmeans_radec>`_.
+:mod:`suchyta_utils.jk` provides functionality to use these regions for JK operations of datasets.
+
+I know that I refer to examples that don't exist anywhere in the documenation yet. I'll fix this when I find the time.
+
+"""
+
 import _jkfunctions as _jk
 import numpy as _np
 import os
@@ -62,20 +74,128 @@ def JKSphere(jarrs, jras, jdecs, jfunc, jargs=[], jkwargs={}, jtype='generate', 
 
 
 class SphericalJK(object):
+    """
+    Class for executing JK realizations of an arbitrary target function.
+    For N regions, calling the :func:`~suchyta_utils.jk.SphericalJK.DoJK` method will execute the target function  N times, leaving out one region in each case.
+    The returns can then be used to compute the JK covariance. 
+
+    The regions are in terms of coordinates on the sphere: RA and DEC.
+    One gives a file generated from :func:`~suchyta_utils.jk.GenerateJKRegions` 
+    (or equivalently from `kmeans_radec <https://github.com/esheldon/kmeans_radec>`_ itself),
+    which specifies the N centers of k-means clusters. The data is then classified into these clusters,
+    leaving out one cluster in each JK realization.
+
+    Once :func:`~suchyta_utils.jk.SphericalJK.DoJK` executes, :func:`~suchyta_utils.jk.SphericalJK.GetResults` can be called to get the results.
+    The results are whatever the return values are from the target function. There will be an N-dimensional array (N being the number of regions)
+    of these return values from the target function. The returns from running the target function over the full area, without subsampling, are also available.
+
+    The constructor arguments here are a bit tedious to explain in words, so I suggest you look at the examples. 
+    The names are meant to be transparent, so once you understand what's going on you'll probably be able to just use those without much else.
+    Nevertheless, the explanations below can be helpful too, so they're there.
+
+    Parameters
+    ----------
+    target (func)
+        The target function, which you want to perform the JKing with. 
+    jkargs (strucutred or 2D array/array of structured or 2D arrays)
+        Arguments to `target` which will change in each JK realization. These are either structured arrays or 2D arrays with RA/DEC columns.
+        The arrays will be subsampled in each JK realization, based on the RA/DEC columns. 
+        If you only need to subsample a single array in the JKing, `jkargs` can just be a single array.
+        To subsample multiple quantites, put them in a list.
+    jkargsby (array/array of arrays)
+        The names/integers of the RA/DEC columns in each of the `jkargs`. Each is given as a 2D list, e.g. ['alphawin_j2000_i', 'deltawin_j2000_i'].
+        For a single array in `jkargs` this single array can be given, otherwise put a set of them in a list.
+        String column names are appropriate is that component of `jkargs` is a structured array.
+        If it is a 2D array use integers, e.g. [0, 1].
+    jkargspos (int/array of ints)
+        Positions of `jkargs` in `target`. This can be a single number of a single `jkargs`, otherwise it's an array.
+        For example, if you have a function ``Test(arr1, arr2, other1, other2, other3='bar')``,
+        where you need to subsample ``arr1`` and ``arr2`` in JK realizations, you could use ``jkargs=[arr1,arr2], jkargspos=[0,1]`` or ``jkargs=[arr2,arr1], jkargspos=[1,0]``.
+        The default assumes that ``jkargs`` are the first N arguments of your function, in the order you gave them.
+        So in these examples, the default in either case would be: ``jkargspos=[0,1]``.
+    nojkargs (list)
+        This is a list, much like usual python *args to a function, for additional arguments which `target` takes, but should not be subsampled in the JKing.
+        The default is an empty list, meaning no additional arguments.
+    nojkargspos (int/array of ints)
+        Analogous to `jkargspos`, but for the positions of `nojkargs` instead of `jkargs`.
+        The intergers are for the positions in the full `target` argument list, not just amound `nojkargs`.
+        For example for ``Test(arr1, other1, arr2, other2, other3='bar')``, where again you want to subsample ``arr1`` and ``arr2``
+        could look like ``jkargs=[arr1,arr2], jkargspos=[0,2], nojkargs=[other1,other2], nojkargspos=[1,3]``.
+        This would be the default for `nojkargspos`; the default "fills in" `nojkargs` 
+        into the function arguments (after accounting for `jkargs`/`jkargspos`), in the order you gave them.
+    nojkkwargs (dict)
+        Keyword arguments to give to `target`. Behavior is like usual python **kwargs. These will not be subsampled.
+    regions (str)
+        Filename of the file with the k-means centers. Can be a file generated by :func:`~suchyta_utils.jk.GenerateJKRegions`.
+    mpi (bool)
+        Whether or not to use MPI multiprocessing. You must have mpi4py installed for this to work. See the examples for more about using MPI.
+
     
-    def __init__(self, target=None, jkargs=None, jkargsby=None, jkargspos=None, nojkargs=[], nojkargspos=[], nojkkwargs={}, mpi=False, regions=None):
+    Returns
+    -------
+    SphericalJK object
+
+    """
+    
+    def __init__(self, target=None, jkargs=None, jkargsby=None, jkargspos=None, nojkargs=[], nojkargspos=[], nojkkwargs={}, regions=None, mpi=False):
         self.SetTarget(target=target, jkargs=jkargs, jkargsby=jkargsby, jkargspos=jkargspos, nojkargs=nojkargs, nojkkwargs=nojkkwargs)
         self.SetMPI(mpi=mpi)
         if regions is not None:
             self.SetRegions(regions)
     
     def SetMPI(self, mpi=True):
+        """
+        Set whether or not MPI will be used by default. :class:`Constructor <suchyta_utils.jk.SphericalJK>` calls this internally.
+
+        Parameters
+        ----------
+        mpi (bool)
+            
+        Returns
+        -------
+        None
+
+        """
+
         self.usempi = mpi
 
     def SetRegions(self, file):
+        """
+        Set the k-means cluster centers. :class:`Constructor <suchyta_utils.jk.SphericalJK>` calls this internally.
+
+        Parameters
+        ----------
+        file (str)
+            Filename of the file with the centers
+
+        Returns
+        -------
+        None
+
+        """
+
         self.regions = file
 
     def GetResults(self, jk=True, full=True):
+        """
+        Get the results of the JKing. To be called after :func:`~DoJK`
+
+        Parameters
+        ----------
+        jk (bool)
+            Whether or not to return the JK results
+        full (bool)
+            Whether or not to return the results over the full area
+
+        Returns
+        -------
+        results (dict):
+            Dictonary of the return values. ``if jk`` there is a ``"jk"`` key with an `njack` length array of the JK returns,
+            as well as an ``"it"`` key which has an array with the integer iteration indexes.
+            ``if full`` the dictionary has a ``"full"`` key with the return values over the full area.
+
+        """
+
         ret = {}
         if jk:
             ret['jk'] = self.jkresults
@@ -85,7 +205,26 @@ class SphericalJK(object):
         return ret
 
 
-    def DoJK(self, mpi=None, regions=None):
+    def DoJK(self, regions=None, mpi=None):
+        """
+        Do the JK iterations. An iteration with the full data will also be done. 
+        After calling this, use the :func:`~GetResults` to return results.
+
+        Parameters
+        ----------
+        regions (str)
+            Filename of the file with the k-means centers. Can be a file generated by :func:`~suchyta_utils.jk.GenerateJKRegions`. 
+            If given, will override `regions` given in :class:`constructor <suchyta_utils.jk.SphericalJK>` or :func:`~SetRegions`.
+        mpi (bool)
+            Whether or not to use MPI multiprocessing. You must have mpi4py installed for this to work. See the examples for more about using MPI.
+            If given, Will override `mpi` setting givin in :class:`constructor <suchyta_utils.jk.SphericalJK>` or :func:`~SetMPI`.
+           
+        Returns
+        -------
+        None
+
+        """
+
         if mpi is None:
             mpi = self.usempi
 
@@ -182,6 +321,12 @@ class SphericalJK(object):
 
 
     def SetTarget(self, target=None, jkargs=None, jkargsby=None, jkargspos=None, nojkargs=[], nojkargspos=[], nojkkwargs={}):
+        """
+        Set all the stuff that has to do with the target function. This is called internally by the :class:`constructor <suchyta_utils.jk.SphericalJK>`. 
+        Refer there for help.
+
+        """
+
         if target is None:
             raise Exception('Must set a target function')
         if jkargs is None:
@@ -282,6 +427,33 @@ class SphericalJK(object):
 
 
 def GenerateJKRegions(ra, dec, njack, jfile, maxiter=200, tol=1.0e-5):
+    """
+    Generate k-means clusters from a set of data, using `kmeans_radec <https://github.com/esheldon/kmeans_radec>`_.
+    If you're unfamilar with the k-means algorithm, the `wikipedia page <https://en.wikipedia.org/wiki/K-means_clustering>`_ is helpful.
+    For roughly uniform data, it generates N-clusters of roughly equal cardinality.
+    Here, distances are computed on the surface of the unit sphere, and coordinates are given as RA/DEC.
+
+    Parameters
+    ----------
+    ra (float array)
+        Right ascension values for each data point.
+    dec (float array)
+        Declination values for each data point.
+    njack (int)
+        Number of k-means clusters to generate, i.e. the number of JK regions.
+    jfile (str)
+        Output file name to save the regions.
+    maxiter (int)
+        Maximum number of iterations for the k-means generation, see `kmeans_radec documentation <https://github.com/esheldon/kmeans_radec>`_.
+    tol (float)
+        Tolerance level needed to be considered converged, see `kmeans_radec documentation <https://github.com/esheldon/kmeans_radec>`_.
+
+    Returns
+    -------
+    None
+
+    """
+
     rd = _np.zeros( (len(ra),2) )
     rd[:,0] = ra
     rd[:,1] = dec
