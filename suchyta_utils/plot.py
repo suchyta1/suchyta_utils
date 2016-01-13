@@ -244,7 +244,7 @@ def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fa
     cb.solids.set_edgecolor("face")
 
 
-def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, noplot=False ):
+def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, noplot=False ):
     """
     Make a number density plot, showing the map in equal-area projection.
     This function uses :mod:`mpl_toolkits.basemap`, but I find that syntax terribly non-convenient and prefer the syntax here.
