@@ -203,7 +203,7 @@ def _lon2RA(lon):
     return "%d:%sh" % (hours, minutes)
 
 
-def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, f=_getCountLocation, noplot=False, extrakwargs={} ):
+def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, f=_getCountLocation, noplot=False, extrakwargs={} ):
     if fig is None:
         fig, ax = plt.subplots(1,1, figsize=(6.5*nside/512,6*nside/512))
     if ax is None:
@@ -303,7 +303,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     return _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getCountLocation, size=size, noplot=noplot, extrakwargs={} )
 
 
-def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[-75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, map=None ):
+def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, parallels=_np.arange(-75.,0.,5.), meridians=_np.arange(0.,360.,5.), dims=[20,20], center=[75,-52.5], vmin=None, vmax=None, clabel='$n_s\ [\mathrm{arcmin}^{-2}]$', rafmt='d', raflip=True, xoffset=0, size=9, map=None ):
     """
     Make a plot of a HEALPix map, showing the map in equal-area projection.
     This function uses :mod:`mpl_toolkits.basemap`, but I find that syntax terribly non-convenient and prefer the syntax here.
