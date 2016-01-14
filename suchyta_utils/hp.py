@@ -148,7 +148,7 @@ def _NestFromHeaderHP(mask, ext, nside=False):
     header = _pyfits.open(mask)[ext].header
     try:
         ordering = header['ORDERING']
-        if ordering.upper()=='NEST':
+        if ordering.upper()=='NESTED':
             nest = True
     except:
         pass
