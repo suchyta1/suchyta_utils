@@ -8,10 +8,6 @@ using Erin Sheldon's `kmeans_radec module <https://github.com/esheldon/kmeans_ra
 
 I know that I refer to examples that don't exist anywhere in the documenation yet. I'll fix this when I find the time.
 
-test
-
-test
-
 """
 
 import _jkfunctions as _jk
