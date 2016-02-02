@@ -1,6 +1,2 @@
-split
-resize 20
-screen
-focus
-screen
-focus
+escape ^Xx 
+bindkey ^xd detach
