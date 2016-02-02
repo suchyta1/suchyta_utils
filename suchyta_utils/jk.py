@@ -278,7 +278,7 @@ class SphericalJK(object):
 
     def _GetArgs(self, jack):
        
-        args = [None] * (len(self.jkargspos)+ len(self.nojkargs))
+        args = [None] * (len(self.jkargspos) + len(self.nojkargs))
         for i in range(len(self.jkargspos)):
 
             if jack > -1:
@@ -300,12 +300,18 @@ class SphericalJK(object):
             except:
                 raise Exception('You must specify a regions file to use')
 
-        centers = _np.loadtxt(regions)
-        self.njack = centers.shape[0]
-        km = kmeans_radec.KMeans(centers)
-
         self.index = []
+        if type(regions)==str:
+            regions = [regions] * len(self.jkargs)
+        if len(regions)!=len(self.jkargs):
+            raise Exception('Number or regions files (%i) does not match the number of jkargs (%i)' %(len(regions),len(self.jkargs)))
+
         for i in range(len(self.jkargs)):
+
+            centers = _np.loadtxt(regions[i])
+            self.njack = centers.shape[0]
+            km = kmeans_radec.KMeans(centers)
+
             ra, dec = self._GetRaDec(i)
             rdi = _np.zeros( (len(ra),2) )
             rdi[:,0] = ra

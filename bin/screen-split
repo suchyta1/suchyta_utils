@@ -1,0 +1,1 @@
+screen -c `cd "$( dirname $0 )" && pwd`/.screenrc-nest_outer -S $1_outer screen -S $1_inner -c `cd "$( dirname $0 )" && pwd`/.screenrc-nest_inner
