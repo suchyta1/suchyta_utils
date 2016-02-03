@@ -1,7 +1,3 @@
-.. Test documentation master file, created by
-   sphinx-quickstart on Mon Nov  9 08:43:05 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 ``suchyta_utils`` Documentation
 ================================
@@ -28,8 +24,8 @@ The package is organized into submodules, whose contents are limited to a farily
    db -- Database <db.rst>
    slr -- Stellar locus regression <slr.rst>
    plot -- Matplotlib utils <plot.rst> 
-   system <system.rst>
-   balrog <balrog.rst>
+   system -- System status monitoriing <system.rst>
+   balrog -- Working with Balrog/DES catalogs <balrog.rst>
 
 
 Installation

@@ -1,8 +1,8 @@
 
-system
+mpi
 ================================
 
-.. automodule:: suchyta_utils.system
+.. automodule:: suchyta_utils.mpi
    :members:
 
 
