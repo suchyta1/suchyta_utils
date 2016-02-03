@@ -27,6 +27,17 @@ The package is organized into submodules, whose contents are limited to a farily
    system -- System status monitoriing <system.rst>
    balrog -- Working with Balrog/DES catalogs <balrog.rst>
 
+There are also a set of shell utilities, which can be used with either bash or tcsh.
+I've never used other shells (does anyone?), so I can't comment if they work there or not.
+Most of what's here is for working with screen, because I like to use that in combination with vim for super awesomeness.
+
+.. toctree::
+   :maxdepth: 2
+
+   screen-split <bin/screen-split.rst>
+   screen-detach <bin/screen-detach.rst>
+   screen-retach <bin/screen-retach.rst>
+
 
 Installation
 ============

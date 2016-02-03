@@ -1,5 +1,6 @@
 """
 The :mod:`system` submodule has functions for working with system resources.
+So far it's only memory usage, but I might add more.
 
 """
 
