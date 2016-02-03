@@ -1,0 +1,4 @@
+array=( $@ )
+len=${#array[@]}
+_args=${array[@]:0:$len-1}
+gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=${@: -1} $_args
