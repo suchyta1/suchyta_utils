@@ -2,7 +2,7 @@
 
 Refer to the [Sphinx documenation](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/doc/html/) for the python module.
 Apologies if not everything is documented, I'm trying to keep it up to date.
-The shell commands are things that could easily just be aliases in rc file,
+The shell commands are things that could easily just be aliases in an rc file,
 but the ones included here are shell agnostic. They work in bash or tcsh.
 
 
