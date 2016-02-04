@@ -1,6 +1,6 @@
 
 ``suchyta_utils`` Documentation
-================================
+===============================
 
 This package is a set of python utilies written by Eric Suchyta while working with DES data and Balrog.
 You shouldn't consider this an "offical" product of anything, but I do my best keep it bug-free and you're welcome to use it if you'd like
@@ -24,15 +24,15 @@ The package is organized into submodules, whose contents are limited to a farily
    db -- Database <db.rst>
    slr -- Stellar locus regression <slr.rst>
    plot -- Matplotlib utils <plot.rst> 
-   system -- System status monitoriing <system.rst>
-   balrog -- Working with Balrog/DES catalogs <balrog.rst>
+   system -- System utils <system.rst>
+   balrog -- Balrog/DES catalogs <balrog.rst>
 
 There are also a set of shell utilities, which can be used with either bash or tcsh.
 I've never used other shells (does anyone?), so I can't comment if they work there or not.
-Most of what's here is for working with screen, because I like to use that in combination with vim for super awesomeness.
+Most of what's here is for working with GNU screen, because I like to use that in combination with vim for super awesomeness.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    screen-split <bin/screen-split.rst>
    screen-detach <bin/screen-detach.rst>
