@@ -37,6 +37,7 @@ Most of what's here is for working with GNU screen, because I like to use that i
    screen-split <bin/screen-split.rst>
    screen-detach <bin/screen-detach.rst>
    screen-retach <bin/screen-retach.rst>
+   catpdfs <bin/catpdfs.rst>
 
 
 Installation
