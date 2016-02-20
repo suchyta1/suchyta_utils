@@ -1,7 +1,9 @@
 <h1> Documentation </h1>
 
-Refer to the Sphinx documenation [here](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/doc/html/).
-I am working to keep it up to date.
+Refer to the [Sphinx pages](http://www.physics.ohio-state.edu/~suchyta.1/suchyta_utils/doc/html/) for the documentation.
+Apologies if not everything is documented, I'm trying to keep it up to date.
+The shell commands are things that could easily just be aliases in an rc file,
+but the ones included here are shell agnostic. They work in bash or tcsh.
 
 
 <h1> Examples </h1>

@@ -80,7 +80,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['*not-in-use*']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -288,3 +288,5 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+numpydoc_show_class_members = False

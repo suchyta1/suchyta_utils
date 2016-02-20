@@ -157,7 +157,8 @@ def LineSegment(ax=None, left=None, right=None, plotkwargs={}):
     right (array)
         Ending coordinate for the line segment
     plotkwargs (dict)
-        Dictionary of keyword-value pairs to give as **kwargs to ax.plot() for drawing the line segment
+        Dictionary of keyword-value pairs to give as `**kwargs` to ``ax.plot()`` for drawing the line segment
+
 
     Returns
     -------
