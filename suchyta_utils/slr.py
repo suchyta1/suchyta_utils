@@ -46,8 +46,8 @@ class SLR:
             self.slrdir = _os.path.dirname(_os.path.realpath(__file__))
 
         self.slrfile = '%s_slr_shiftmap.py' %(release)
-        _slr = _imp.load_source('_slr', _os.path.join(self.slrdir,self.slrfile))
-
+        thisdir = _os.path.dirname(_os.path.realpath(__file__))
+        _slr = _imp.load_source('_slr', _os.path.join(thisdir,self.slrfile))
 
         if release=='y1a1':
             self.slrfits = _os.path.join(slrdir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(area))
