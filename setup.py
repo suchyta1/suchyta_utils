@@ -7,7 +7,7 @@ files = os.listdir(bindir)
 binfiles = [os.path.join(bindir,f) for f in files]
 
 setup(name="suchyta_utils", 
-      version="0.1.0",
+      version="0.1.01",
       description="Utilities written by Eric Suchyta",
       license = "GPL",
       packages=['suchyta_utils'],
