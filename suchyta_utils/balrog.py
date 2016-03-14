@@ -393,6 +393,19 @@ def AngularDistance(ra1, ra2, dec1, dec2):
     return c*180.0/_np.pi
 
 
+def MagerrS2N(magerr):
+    return 1.0 / (_np.power(10.0, magerr/2.5) - 1.0)
+
+
+def BadPosMag(cat):
+    offset = 3600.0 * AngularDistance(cat['alphawin_j2000_g'], cat['alphawin_j2000_i'], cat['deltawin_j2000_g'], cat['deltawin_j2000_i'])
+    c = (cat['magerr_auto_g'] > 0) & (cat['magerr_auto_g'] < 50)
+    s2n = _np.zeros(len(cat), dtype=_np.float32)
+    s2n[c] = MagerrS2N(cat[c]['magerr_auto_g'])
+    cut = (s2n > 5) & (_np.fabs(offset) > 1.0)
+    return cut
+
+
 def BadPos(cat):
     """
     Get objects of large astrometric color (windowed offsets between g and i band)
@@ -412,10 +425,7 @@ def BadPos(cat):
     c = (cat['fluxerr_auto_g'] > 0)
     s2n = _np.zeros(len(cat), dtype=_np.float32)
     s2n[c] = cat['flux_auto_g'][c] / cat['fluxerr_auto_g'][c]
-
-    bad = _np.zeros(len(cat), dtype=_np.int16)
     cut = (s2n > 5) & (_np.fabs(offset) > 1.0)
-
     return cut
 
 

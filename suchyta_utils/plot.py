@@ -27,7 +27,7 @@ which shows some basic usage::
 import matplotlib as _mpl
 import matplotlib.pyplot as _plt
 import os as _os
-import suchyta_utils as _es
+import suchyta_utils.hp as _es_hp
 import healpy as _hp
 import numpy as _np
 
@@ -174,18 +174,18 @@ def LineSegment(ax=None, left=None, right=None, plotkwargs={}):
 
 
 def _getMapLocation(cat=None, ra=None, dec=None, nside=512, nest=False, map=None):
-    ipix = _es.hp.RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
+    ipix = _es_hp.RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
     upix = _np.unique(ipix)
     vals = map[upix]
-    lon, lat = _es.hp.Healpix2RaDec(upix, nside=nside, nest=nest)
+    lon, lat = _es_hp.Healpix2RaDec(upix, nside=nside, nest=nest)
     return vals, lat, lon
 
 def _getCountLocation(cat=None, ra=None, dec=None, nside=512, nest=False):
-    ipix = _es.hp.RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
+    ipix = _es_hp.RaDec2Healpix(cat=cat, ra=ra, dec=dec, nside=nside, nest=nest)
     bc = _np.bincount(ipix)
     pixels = _np.nonzero(bc)[0]
     bc = bc[bc>0] / _hp.nside2resol(nside, arcmin=True)**2 # in arcmin^-2
-    lon, lat = _es.hp.Healpix2RaDec(pixels, nside=nside, nest=nest)
+    lon, lat = _es_hp.Healpix2RaDec(pixels, nside=nside, nest=nest)
     return bc, lat, lon
 
 
