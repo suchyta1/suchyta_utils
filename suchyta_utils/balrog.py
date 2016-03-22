@@ -460,8 +460,26 @@ def UniformRandom(size, ramin=0, ramax=360, decmin=-90, decmax=90):
     return [ra, dec]
 
 
+def _Downsample(data, max, getin=False):
+    if (max is not None) and (len(data) > max):
+        keep = _np.random.choice(len(data), size=max, replace=False)
+        arr = data[keep, :]
+        a = arr
+    else:
+        a = data
+        keep = _np.arange(len(data))
 
-def ReweightMatch(keys=None, matchto=None, reweight=None, nn=100):
+    if getin:
+        return a, keep
+    else:
+        return a
+
+def SelectKeys(data, keys):
+    new_data = _np.vstack([data[item] for item in keys]).T
+    return new_data
+
+
+def ReweightMatch(keys=None, matchto=None, reweight=None, nn=100, matchto_max=None, reweight_max=None, n_jobs=1):
     """
     Find the weights that match one sample to another, using a nearest neighbor calculation.
 
@@ -485,45 +503,48 @@ def ReweightMatch(keys=None, matchto=None, reweight=None, nn=100):
     if keys is None:
         raise Exception('have to match something!')
 
-    truthSample_arr = _np.zeros( (len(matchto), len(keys)) )
-    matchSample_arr = _np.zeros( (len(reweight), len(keys)) )
-    
-    for i in range(len(keys)):
-        truthSample_arr[:,i] =  matchto[keys[i]]
-        matchSample_arr[:,i] =  reweight[keys[i]]
+    findat = SelectKeys(reweight, keys)
+    matcharr = SelectKeys(matchto, keys)
+    matcharr = _Downsample(matcharr, matchto_max)
+    reweightarr, inrc = _Downsample(findat, reweight_max, getin=True)
 
-    NP = _calcNN(nn, truthSample_arr, matchSample_arr)
-    bad = (NP <= 1)
-    wts = NP * 1./nn
+    if type(nn)!=int:
+        nn = int(nn*len(reweightarr))
+    
+    wts = _calcNN(nn, matcharr, reweightarr, n_jobs=n_jobs, findat=findat, inrc=inrc)
+    bad = (wts < 1)
     wts[bad] = 0.
 
-    return wts
+    return wts/_np.sum(wts)
 
 
-def _calcNN(Nnei, magP, magT):
+def _calcNN(nn, matchto_cat, reweight_cat, n_jobs=1, findat=None, inrc=None):
+    if findat is None:
+        findat = reweight_cat
+        inrc = _np.ones(len(findat), dtype=_np.bool_)
 
-    # Find Nnei neighbors around each point
-    # in the training sample.
-    # Nnei+1 because [0] is the point itself.
-    nbrT        = _NN(n_neighbors=Nnei+1, n_jobs=-1).fit(magT)
-    distT, indT = nbrT.kneighbors(magT, n_neighbors=Nnei+1)
+    # Find nn neighbors around each point in the sample to be reweighted.
+    # nn+1 because [0] can the point itself (when the reweight_cat entry is in findat)
+    tree_rc = _NN(n_neighbors=nn+1, n_jobs=n_jobs).fit(reweight_cat)
+    dist_rc, ind_rc = tree_rc.kneighbors(findat, n_neighbors=nn+1)
+    which_nn = _np.array([nn]*len(dist_rc))
+    which_nn[~inrc] = which_nn[~inrc] - 1
    
-    # Find how many neighbors are there around 
-    # each point in the photometric sample 
-    # within the radius that contains Nnei in 
-    # the training one. 
-    nbrP        = _NN(radius=distT[:, Nnei], n_jobs=-1).fit(magP)
-    distP, indP = nbrP.radius_neighbors(magT, radius=distT[:, Nnei])
+    # In the sample to match, find how many neighbors there are within the radius that contained nn neighbors in the sample to be reweighted.
+    d = dist_rc[_np.arange(len(dist_rc)), which_nn]
+    tree_mc = _NN(radius=d, n_jobs=n_jobs).fit(matchto_cat)
+    dist_mc, ind_mc = tree_mc.radius_neighbors(findat, radius=d)
+    n = [len(dmc) for dmc in dist_mc]
 
-
-    # Get the number of photometric neighbors
+    '''
     NP = []
-    for i in range(len(distP)):
-        NP.append(len(distP[i])-1)
-
-    NP = _np.asarray(NP)
+    for i in range(len(dist_mc)):
+        #NP.append(len(dist_mc[i])-1)
+        NP.append(len(dist_mc[i]))
+    NP = _np.array(NP)
     return NP
-
+    '''
+    return n
 
 
 class Y1Processing(object):

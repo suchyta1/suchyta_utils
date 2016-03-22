@@ -303,7 +303,7 @@ class SphericalJK(object):
             raise Exception('Number or regions files (%i) does not match the number of jkargs (%i)' %(len(regions),len(self.jkargs)))
 
         for i in range(len(self.jkargs)):
-
+            
             centers = _np.loadtxt(regions[i])
             self.njack = centers.shape[0]
             km = kmeans_radec.KMeans(centers)

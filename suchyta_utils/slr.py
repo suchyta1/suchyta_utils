@@ -73,7 +73,7 @@ class SLR:
         return dd
 
 
-    def ApplySLRBands(self, bands, data=None, ra='alphawin_j2000', dec='deltawin_j2000', kind='mag', key='mag_auto'):
+    def ApplySLRBands(self, bands, data=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', kind='mag', key='mag_auto'):
         """
         Apply the SLR corrections to the dataset. 
 
