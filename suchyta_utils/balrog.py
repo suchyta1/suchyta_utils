@@ -397,6 +397,24 @@ def MagerrS2N(magerr):
     return 1.0 / (_np.power(10.0, magerr/2.5) - 1.0)
 
 
+def _GetSN(cat, band):
+    c = (cat['magerr_auto_%s'%(band)] > 0) & (cat['magerr_auto_%s'%(band)] < 50)
+    s2n = _np.zeros(len(cat), dtype=_np.float32)
+    s2n[c] = MagerrS2N(cat[c]['magerr_auto_%s'%(band)])
+    return s2n
+
+
+def AllBadPosMag(cat, bands=['g','r','i','z']):
+    cut = _np.zeros(len(cat), dtype=_np.bool_)
+    for i in range(len(bands)):
+        s2n_1 = _GetSN(cat, bands[i])
+        for j in range(len(bands[(i+1):])):
+            offset = 3600.0 * AngularDistance(cat['alphawin_j2000_%s'%(bands[i])], cat['alphawin_j2000_%s'%(bands[j])], cat['deltawin_j2000_%s'%(bands[i])], cat['deltawin_j2000_%s'%(bands[j])])
+            s2n_2 = _GetSN(cat, bands[j])
+            thisbad = ((s2n_1 > 5) | (s2n_2 > 5)) & (_np.fabs(offset) > 1.0) 
+            cut = cut | thisbad
+    return cut
+
 def BadPosMag(cat):
     offset = 3600.0 * AngularDistance(cat['alphawin_j2000_g'], cat['alphawin_j2000_i'], cat['deltawin_j2000_g'], cat['deltawin_j2000_i'])
     c = (cat['magerr_auto_g'] > 0) & (cat['magerr_auto_g'] < 50)
