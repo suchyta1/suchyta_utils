@@ -411,7 +411,8 @@ def AllBadPosMag(cat, bands=['g','r','i','z']):
         for j in range(len(bands[(i+1):])):
             offset = 3600.0 * AngularDistance(cat['alphawin_j2000_%s'%(bands[i])], cat['alphawin_j2000_%s'%(bands[j])], cat['deltawin_j2000_%s'%(bands[i])], cat['deltawin_j2000_%s'%(bands[j])])
             s2n_2 = _GetSN(cat, bands[j])
-            thisbad = ((s2n_1 > 5) | (s2n_2 > 5)) & (_np.fabs(offset) > 1.0) 
+            #thisbad = ((s2n_1 > 5) | (s2n_2 > 5)) & (_np.fabs(offset) > 1.0) 
+            thisbad = ((s2n_1 > 5) & (s2n_2 > 5)) & (_np.fabs(offset) > 1.0) 
             cut = cut | thisbad
     return cut
 
@@ -528,7 +529,7 @@ def ReweightMatch(keys=None, matchto=None, reweight=None, nn=100, matchto_max=No
 
     if type(nn)!=int:
         nn = int(nn*len(reweightarr))
-    
+
     wts = _calcNN(nn, matcharr, reweightarr, n_jobs=n_jobs, findat=findat, inrc=inrc)
     bad = (wts < 1)
     wts[bad] = 0.
@@ -595,13 +596,16 @@ class Y1Processing(object):
 
 
         elif key=='slr':
-            self.slrcode = _os.path.join(self.dir, 'y1a1_slr_shiftmap.py')
             self.slrfits = _os.path.join(self.dir, 'y1a1_%s_slr_wavg_zpshift2.fit'%(self.subset))
-
             noslr = False
+
+            '''
+            #self.slrcode = _os.path.join(self.dir, 'y1a1_slr_shiftmap.py')
             if not _os.path.exists(self.slrcode):
                 print 'WARNING: SLR python file does not exist for your given directory and subset: %s'%(self.slrcode)
                 noslr = True
+            '''
+
             if not _os.path.exists(self.slrfits):
                 print 'WARNING: SLR FITS file does not exist for your given directory and subset: %s'%(self.slrfits)
                 noslr = True
@@ -741,7 +745,7 @@ class Y1Dataset(Y1Processing):
 
     def BenchmarkMasking(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
         self.UsualMasking(ra=ra, dec=dec)
-        self.ApplyDepth(cond='>', val=22)
+        self.ApplyDepth(cond='>', val=22, ra=ra, dec=dec)
 
 
     def ApplySLR(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bands=['g','r','i','z','y'], key='mag_auto'):
@@ -895,6 +899,9 @@ class Y1Dataset(Y1Processing):
         hist, bins = _np.histogram(mapval, bins=bins)
         cent = (bins[1:]+bins[:-1])/2.0
         return cent, hist, bins
+    
+    def ApplyCut(self, key='objtype', val=1, cond='='):
+        self.data = ApplyCut(self.data, key=key, val=val, cond=cond)
 
 
     def __init__(self, data, processing=None):
