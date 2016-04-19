@@ -32,6 +32,7 @@ import healpy as _hp
 import numpy as _np
 
 from mpl_toolkits.basemap import Basemap as _Basemap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.cm as _cm
 
 
@@ -362,3 +363,9 @@ def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, paral
     return _BasePlot(ax=ax, fig=fig, nside=nside, cat=cat, ra=ra, dec=dec, nest=nest, parallels=parallels, meridians=meridians, dims=dims, center=center, vmin=vmin, vmax=vmax, clabel=clabel, rafmt=rafmt, raflip=raflip, xoffset=xoffset, f=_getMapLocation, size=9, extrakwargs={'map':map} )
 
 
+
+def AddColorbar(ax, p, pct=5):
+    div = make_axes_locatable(ax)
+    s = str(pct) + '%'
+    cax = div.append_axes("right", size=s, pad=0.05)
+    cbar = _plt.colorbar(p, cax=cax)
