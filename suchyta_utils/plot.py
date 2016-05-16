@@ -216,16 +216,20 @@ def _BasePlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fa
     w = r * _np.cos(_np.radians(center[1])) * _np.radians(dims[0])
 
     m = _Basemap(projection='aea', width=w, height=h, lat_0=center[1], lon_0=center[0], ax=ax)
+    #m = _Basemap(projection='aea', llcrnrlon=110, llcrnrlat=-80, urcrnrlon=-70, urcrnrlat=20, lon_0=50, lat_0=-5, ax=ax)
+    #m = _Basemap(projection='eqdc', width=w, height=h, lat_0=center[1], lon_0=center[0], ax=ax)
+    #m = _Basemap(projection='spstere',boundinglat=10,lon_0=270,resolution='l')
+
     if rafmt=='h':
         m.drawmeridians(meridians,labels=[0,0,0,1], fmt=_Lon2RA, linewidth=0.5, yoffset=(r*_np.radians(yoffset)))
     elif rafmt=='d':
-        m.drawmeridians(meridians,labels=[0,0,0,1], linewidth=0.5, yoffset=(r*_np.radians(yoffset)))
+        m.drawmeridians(meridians,labels=[0,0,1,0], linewidth=0.5, yoffset=(r*_np.radians(yoffset)))
 
     if raflip:
         m.drawparallels(parallels,labels=[0,1,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(xoffset)))
         ax.invert_xaxis()
     else:
-        m.drawparallels(parallels,labels=[1,0,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(xoffset)))
+        m.drawparallels(parallels,labels=[0,1,0,0], labelstyle="+/-", linewidth=0.5, xoffset=(r*_np.radians(xoffset)))
 
 
     if noplot:

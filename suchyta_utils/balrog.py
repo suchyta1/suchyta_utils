@@ -281,7 +281,7 @@ def RemoveNosim(m, nosim, version=None, id='balrog_index'):
         matched = _nnmatch(matched, nosim, id, version)
     return matched
 
-def AddModestNeed(keys, release='sva1'):
+def AddModestNeed(keys, release='sva1', wavg=False):
     """
     Add any missing keys to a list that needed to compute `modest_class` for a dataset.
 
@@ -303,6 +303,9 @@ def AddModestNeed(keys, release='sva1'):
         extra = ['flags_i', 'class_star_i', 'mag_auto_i', 'spread_model_i', 'spreaderr_model_i', 'mag_psf_i']
     elif release=='y1a1':
         extra = ['spread_model_i', 'spreaderr_model_i']
+        if wavg:
+            extra.append('mag_auto_i')
+            extra.append('wavg_spread_model_i')
 
     for e in extra:
         if e not in keys:
@@ -311,7 +314,7 @@ def AddModestNeed(keys, release='sva1'):
     return k
 
 
-def Modest(data, release='sva1'):
+def Modest(data, release='sva1', wavg=False):
     """
     Find the modest class classifications for the data. The array must have all the required fields or you'll get an error.
 
@@ -354,7 +357,11 @@ def Modest(data, release='sva1'):
         starcut = (_np.fabs(data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i']) < 0.002)
         modest[starcut] = 2
 
-        galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.005) #& (-(abs(data['wavg_spread_model_i']) < 0.002 and MAG_AUTO_I < 21.5) then 1)
+        galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.005) 
+        #galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.015) 
+        if wavg:
+            galcut = (galcut) & (~( (abs(data['wavg_spread_model_i']) < 0.002) & (data['mag_auto_i'] < 21.5) ))
+        #galcut = (galcut) & (data['spreaderr_model_i'] < 0.002) 
         modest[galcut] = 1
 
         nncut = -(galcut | starcut | ncut)
@@ -756,14 +763,19 @@ class Y1Dataset(Y1Processing):
         else:
             print 'No SLR to apply'
 
-    def ApplyModest(self, val):
-        modest = Modest(self.data, release='y1a1')
+    def ApplyModest(self, val, wavg=False):
+        modest = Modest(self.data, release='y1a1', wavg=wavg)
         self.data = self.data[ modest==val ]
 
 
-    def ModestGalaxies(self):
+    def ModestGalaxies(self, g='modest', wavg=False):
         self.ApplySLR(key='mag_auto')
-        self.ApplyModest(1)
+
+        if g=='modest':
+            self.ApplyModest(1, wavg=wavg)
+        elif g=='truth':
+            cut = (self.data['objtype']==1)
+            self.data = self.data[cut]
 
     def GoldColorCuts(self):
         # Crazy Colors
@@ -805,9 +817,9 @@ class Y1Dataset(Y1Processing):
         self.data = self.data[ (self.data['mag_auto_i'] > 17.5) & (self.data['mag_auto_i'] < 22) ]
 
 
-    def PseudoBenchmarkGalaxies(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i'):
+    def PseudoBenchmarkGalaxies(self, ra='alphawin_j2000_i', dec='deltawin_j2000_i', g='modest', wavg=False):
         self.UsualMasking(ra=ra, dec=dec)
-        self.ModestGalaxies()
+        self.ModestGalaxies(g=g, wavg=wavg)
         self.PseudoBenchmarkQualityCuts()
 
     
@@ -856,7 +868,7 @@ class Y1Dataset(Y1Processing):
 
 
 
-    def SystematicN(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None, jk=None):
+    def SystematicN(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None, jk=None, getbins=False):
         file = self._FindSysFile(key=key, band=band, avgtype=avgtype)
         if file is None:
             return None, None, None
@@ -879,10 +891,14 @@ class Y1Dataset(Y1Processing):
             full = results['full']
             it = results['jk']
             cov = _GetCov(full, it)
-            return cent, full, cov
+            ret = [cent, full, cov]
         else:
             val = _NCalc(self.data, map, nest, bins, ra=ra, dec=dec)
-            return cent, val
+            ret = [cent, val]
+
+        if getbins:
+            ret.append(bins)
+        return ret
 
 
     def SystematicHistogram(self, key=None, band=None, avgtype=None, ra='alphawin_j2000_i', dec='deltawin_j2000_i', bins=None):
