@@ -221,7 +221,7 @@ def ColumnDescribe(table, user=None):
     if user is not None:
         arr = cur.quick("SELECT column_name, data_type, data_precision, data_scale, nullable, char_length from all_tab_cols where table_name='%s' and owner='%s' order by column_name"%(table.upper(),user.upper()), array=True)
     else:
-        arr = cur.quick("SELECT column_name, data_type, data_precision, data_scale, nullable, char_length from all_tab_cols where table_name='%s order by column_name'"%(table.upper()), array=True)
+        arr = cur.quick("SELECT column_name, data_type, data_precision, data_scale, nullable, char_length from all_tab_cols where table_name='%s' order by column_name"%(table.upper()), array=True)
     return arr
 
 
