@@ -878,8 +878,8 @@ class Y1Dataset(Y1Processing):
         map, nest = _hp.GetBorisMap(file)
         if bins is None:
             mapval = _hp.RaDec2MapValue(map=map, nest=nest, cat=self.data, ra=ra, dec=dec)
-            left = _np.percentile(mapval, 2)
-            right = _np.percentile(mapval, 98)
+            left = _np.percentile(mapval, 5)
+            right = _np.percentile(mapval, 95)
             bins = _np.linspace(left, right, num=11)
             autobin = True
         cent = (bins[1:]+bins[:-1])/2.0

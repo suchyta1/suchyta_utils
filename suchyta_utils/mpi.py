@@ -79,3 +79,9 @@ def Scatter(*args):
         return [_mpif._scatter(arg) for arg in args]
 
 
+def aScatter(hsize, inc, noscatter=False):
+    start, end = _mpif._aScatter(hsize, inc)
+    if noscatter:
+        return start, end
+    start, end = Scatter(start,end)
+    return [start, end]

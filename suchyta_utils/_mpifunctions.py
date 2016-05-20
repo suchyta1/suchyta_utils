@@ -52,3 +52,17 @@ def _gather(arr):
     return arr
 
 
+
+def _aScatter(hsize, inc):
+    if MPI.COMM_WORLD.Get_rank()==0:
+        num = hsize/inc
+        start = np.arange(num) * inc
+        end = np.arange(1,num+1) * inc
+        if hsize%inc != 0:
+            num += 1
+            start = np.append(start, end[-1])
+            end = np.append(end, hsize)
+    else:
+        start = end = None
+
+    return [start, end]
