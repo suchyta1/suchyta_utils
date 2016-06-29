@@ -38,9 +38,13 @@ except:
 
 try:
     from mpl_toolkits.basemap import Basemap as _Basemap
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
 except:
     print "basemap not found. Can't use that"
+
+try :
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+except:
+    print "make_axes_locatable not found. Can't use that"
 
 
 
