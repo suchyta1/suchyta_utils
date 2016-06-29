@@ -380,8 +380,10 @@ def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, paral
 
 
 
-def AddColorbar(ax, p, pct=5):
+def AddColorbar(fig, ax, p, pct=5, kwargs={}):
     div = make_axes_locatable(ax)
     s = str(pct) + '%'
     cax = div.append_axes("right", size=s, pad=0.05)
-    cbar = _plt.colorbar(p, cax=cax)
+    #cbar = _plt.colorbar(p, cax=cax, **kwargs)
+    cbar = fig.colorbar(p, cax=cax, **kwargs)
+    return cbar
