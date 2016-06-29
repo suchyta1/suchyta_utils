@@ -1,4 +1,4 @@
-""" 
+"""
 (In my mind) :mod:`suchyta_utils.plot` makes plots looks nicer by default
 and makes plotting maps in python more user-friendly.
 
@@ -27,20 +27,28 @@ which shows some basic usage::
 import matplotlib as _mpl
 import matplotlib.pyplot as _plt
 import os as _os
-import suchyta_utils.hp as _es_hp
-import healpy as _hp
 import numpy as _np
-
-from mpl_toolkits.basemap import Basemap as _Basemap
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.cm as _cm
+
+try:
+    import healpy as _hp
+    import suchyta_utils.hp as _es_hp
+except:
+    print "healpy not found. Can't use healpy plotting functions."
+
+try:
+    from mpl_toolkits.basemap import Basemap as _Basemap
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+except:
+    print "basemap not found. Can't use that"
+
 
 
 def Setup():
     """
     Setup some automatic styling of matplotlib plots. This started from
     a Supermongo-like style file from Matt Becker, that I probably tweaked to make things look nice to me.
-    It loads `custom-style.mpl <https://github.com/suchyta1/suchyta_utils/blob/master/suchyta_utils/custom-sytle.mpl>`_, so look there to see all the settings. 
+    It loads `custom-style.mpl <https://github.com/suchyta1/suchyta_utils/blob/master/suchyta_utils/custom-sytle.mpl>`_, so look there to see all the settings.
     The most notable thing that I wanted was drawing grid lines.
 
     .. note::
@@ -61,36 +69,36 @@ def Setup():
     style = _SetStyle(style)
 
 
-def _ReadStyle(file):                                                                                     
-    d = {}                                                                                               
-    with open(file) as f:                                                                                
-        for line in f:                                                                                   
-            l = line.strip()                                                                             
-            if (l=='') or (l[0]== '#') :                                                                 
-                continue                                                                                 
-                                                                                                         
-            key, val = l.split(':')                                                                      
-            k = key.strip()                                                                              
-            v = val.strip()                                                                              
-                                                                                                         
-            if v[0] in ["'", '"']:                                                                       
-                d[k] = v                                                                                 
-            else:                                                                                        
-                try:                                                                                     
-                    d[k] = float(v)                                                                      
-                except:                                                                                  
-                    d[k] = v                                                                             
-    return d                                                                                             
+def _ReadStyle(file):
+    d = {}
+    with open(file) as f:
+        for line in f:
+            l = line.strip()
+            if (l=='') or (l[0]== '#') :
+                continue
 
-                                                                                                         
-def _SetStyle(style):                                                                                     
-    for k,v in style.iteritems():                                                                        
-        _mpl.rcParams[k]=v 
+            key, val = l.split(':')
+            k = key.strip()
+            v = val.strip()
+
+            if v[0] in ["'", '"']:
+                d[k] = v
+            else:
+                try:
+                    d[k] = float(v)
+                except:
+                    d[k] = v
+    return d
+
+
+def _SetStyle(style):
+    for k,v in style.iteritems():
+        _mpl.rcParams[k]=v
 
 
 def NTicks(ax, nxticks=None, nyticks=None):
     """
-    Set the maximum number of ticks along the axes. 
+    Set the maximum number of ticks along the axes.
     This uses :mod:`matplotlib.ticker.MaxNLocator`.
 
     Parameters
@@ -137,7 +145,7 @@ def OffsetX(r, offset=0, log=False):
         newr = _np.log10(r)
     else:
         newr = copy.copy(r)
-    
+
     newr = newr + offset
     if log:
         newr = _np.power(10, newr)
@@ -165,7 +173,7 @@ def LineSegment(ax=None, left=None, right=None, plotkwargs={}):
     -------
     ax (matplotlib axis object)
         The modified axis object
-        
+
     """
     if ax is None:
         fig, ax = _plt.subplots(1,1)
@@ -254,7 +262,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     """
     Make a number density plot, showing the map in equal-area projection.
     This function uses :mod:`mpl_toolkits.basemap`, but I find that syntax terribly non-convenient and prefer the syntax here.
-   
+
     .. note::
         Number densities to plot are computed in HEALPix cells, and each HEALPix cell will be drawn as a square,
         so setting a higher `nside` plots more points. The size of thise points is not currently adjustable,
@@ -278,7 +286,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     dec (float array/str)
         if `cat` is None, an array of the DEC values for the objects. Otherwise, the column name for the DEC column in `cat`.
     nest (bool)
-        Whether or not to use nested format for the plot. 
+        Whether or not to use nested format for the plot.
     parallels (array)
         Parallels to draw on the plot
     meridians (array)
@@ -298,7 +306,7 @@ def MapPlot(ax=None, fig=None, nside=512, cat=None, ra=None, dec=None, nest=Fals
     raflip (bool)
         Whether or not to plot the larger RA values on the left
     xoffset (float)
-        Offset for the labels of the paralles, in units of degrees on the plot. 
+        Offset for the labels of the paralles, in units of degrees on the plot.
 
     Returns
     -------
@@ -313,7 +321,7 @@ def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, paral
     """
     Make a plot of a HEALPix map, showing the map in equal-area projection.
     This function uses :mod:`mpl_toolkits.basemap`, but I find that syntax terribly non-convenient and prefer the syntax here.
-   
+
     .. note::
         This function plots the map in whatever resolution the map has.
         Things can end up looking weird for certain combinations of axis ratios, areas covered, and `nsides`.
@@ -336,7 +344,7 @@ def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, paral
     dec (float array/str)
         if `cat` is None, an array of the DEC values for the objects. Otherwise, the column name for the DEC column in `cat`.
     nest (bool)
-        Whether or not to use nested format for the plot. 
+        Whether or not to use nested format for the plot.
     parallels (array)
         Parallels to draw on the plot
     meridians (array)
@@ -356,7 +364,7 @@ def MapValPlot(ax=None, fig=None, cat=None, ra=None, dec=None, nest=False, paral
     raflip (bool)
         Whether or not to plot the larger RA values on the left
     xoffset (float)
-        Offset for the labels of the paralles, in units of degrees on the plot. 
+        Offset for the labels of the paralles, in units of degrees on the plot.
 
     Returns
     -------
