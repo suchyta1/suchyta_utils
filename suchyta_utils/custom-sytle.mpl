@@ -4,12 +4,13 @@ lines.linestyle     : -
 lines.color         : black
  
 #fonts & text
-font.family         : serif
+font.family         : cmr10
+font.sans-serif     : Arial
 font.weight         : normal
 font.size           : 12.0
 text.color          : black
-text.usetex         : True
-text.latex.preamble : \usepackage{txfonts}
+#text.usetex         : True
+#text.latex.preamble : \usepackage{txfonts}
 
  
 #axes & ticks
