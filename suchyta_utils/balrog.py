@@ -102,7 +102,7 @@ def AddUniqueID(*cats, **kwargs):
     Effectively, it changes a 2D index into a 1D one.
 
     .. note::
-        By "unique", I mean that `out` will be unique within the truth catalog. 
+        By "unique", I mean that `out` will be unique within the truth catalog.
         It is possible for mulitiple detections to be associated with the same truth Balrog objects,
         such that are duplicate `id` entries in `sim` or `nosim` even with a unique identifier in the truth catalog.
 
@@ -124,12 +124,12 @@ def AddUniqueID(*cats, **kwargs):
         A list of the arrays with the new columns, ordered in the same order you gave the function arguments.
 
     """
-    
+
     kwargs = _DefineKwargs(kwargs)
     version = kwargs['version']
     id = kwargs['id']
     out = kwargs['out']
-   
+
     cats = list(cats)
     for i in range(len(cats)):
         cats[i] = _rec.append_fields(cats[i], out, _np.copy(cats[i][id]))
@@ -210,7 +210,7 @@ def Completeness(sim=None, truth=None, binon='mag_i', bins=None, method='cut', m
     -------
     comp (float array)
         The completeness in each bin
-        
+
     """
     c = _np.zeros(len(bins)-1)
 
@@ -253,7 +253,7 @@ def RemoveNosim(m, nosim, version=None, id='balrog_index'):
     """
     Remove entries from the Balrog measurement catalog ('sim') whose detection position is nearby a previously existing object ('nosim').
     This is done by matching the two catalogs on an index.
-        
+
     Parameters
     ----------
     m (stuctured array)
@@ -325,7 +325,7 @@ def Modest(data, release='sva1', wavg=False):
 
     Parameters
     ----------
-    data (structure array) 
+    data (structure array)
         The data array to find `modest_class` for each object
     release (str)
         Year of the dataset. Allowed values are ['sva1', 'y1a1']
@@ -357,11 +357,11 @@ def Modest(data, release='sva1', wavg=False):
         starcut = (_np.fabs(data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i']) < 0.002)
         modest[starcut] = 2
 
-        galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.005) 
-        #galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.015) 
+        galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.005)
+        #galcut = (data['spread_model_i'] + (5.0/3.0)*data['spreaderr_model_i'] > 0.015)
         if wavg:
             galcut = (galcut) & (~( (abs(data['wavg_spread_model_i']) < 0.002) & (data['mag_auto_i'] < 21.5) ))
-        #galcut = (galcut) & (data['spreaderr_model_i'] < 0.002) 
+        #galcut = (galcut) & (data['spreaderr_model_i'] < 0.002)
         modest[galcut] = 1
 
         nncut = -(galcut | starcut | ncut)
@@ -418,8 +418,8 @@ def AllBadPosMag(cat, bands=['g','r','i','z']):
         for j in range(len(bands[(i+1):])):
             offset = 3600.0 * AngularDistance(cat['alphawin_j2000_%s'%(bands[i])], cat['alphawin_j2000_%s'%(bands[j])], cat['deltawin_j2000_%s'%(bands[i])], cat['deltawin_j2000_%s'%(bands[j])])
             s2n_2 = _GetSN(cat, bands[j])
-            #thisbad = ((s2n_1 > 5) | (s2n_2 > 5)) & (_np.fabs(offset) > 1.0) 
-            thisbad = ((s2n_1 > 5) & (s2n_2 > 5)) & (_np.fabs(offset) > 1.0) 
+            #thisbad = ((s2n_1 > 5) | (s2n_2 > 5)) & (_np.fabs(offset) > 1.0)
+            thisbad = ((s2n_1 > 5) & (s2n_2 > 5)) & (_np.fabs(offset) > 1.0)
             cut = cut | thisbad
     return cut
 
@@ -555,7 +555,7 @@ def _calcNN(nn, matchto_cat, reweight_cat, n_jobs=1, findat=None, inrc=None):
     dist_rc, ind_rc = tree_rc.kneighbors(findat, n_neighbors=nn+1)
     which_nn = _np.array([nn]*len(dist_rc))
     which_nn[~inrc] = which_nn[~inrc] - 1
-   
+
     # In the sample to match, find how many neighbors there are within the radius that contained nn neighbors in the sample to be reweighted.
     d = dist_rc[_np.arange(len(dist_rc)), which_nn]
     tree_mc = _NN(radius=d, n_jobs=n_jobs).fit(matchto_cat)
@@ -616,7 +616,7 @@ class Y1Processing(object):
             if not _os.path.exists(self.slrfits):
                 print 'WARNING: SLR FITS file does not exist for your given directory and subset: %s'%(self.slrfits)
                 noslr = True
-           
+
             if not noslr:
                 if not prints:
                     _sys.stdout = f
@@ -625,7 +625,7 @@ class Y1Processing(object):
                 if not prints:
                     _sys.stdout = so
                     _sys.stderr = se
-   
+
 
     def FindSystematics(self, systematics):
         self.systematicsdir = _os.path.join(self.dir, systematics, 'nside4096_oversamp4')
@@ -637,7 +637,7 @@ class Y1Processing(object):
             rr = {}
             for band in bands:
                 rr[band] = _re.compile('_band_%s_'%(band))
-            
+
             found = [ [], [], [], [] ]
             flen = [ 0, 0, 0, 0 ]
             self._LookFor(files, '_band_.*?_oversamp.*?_(.*?)(\d*?)__mean\.fits\.gz$', rr, 'mean', found, flen, bands=bands)
@@ -822,7 +822,7 @@ class Y1Dataset(Y1Processing):
         self.ModestGalaxies(g=g, wavg=wavg)
         self.PseudoBenchmarkQualityCuts()
 
-    
+
     def _FindSysFile(self, key=None, band=None, avgtype=None):
         a = avgtype
         if key is None:
@@ -872,7 +872,7 @@ class Y1Dataset(Y1Processing):
         file = self._FindSysFile(key=key, band=band, avgtype=avgtype)
         if file is None:
             return None, None, None
-       
+
         autobin = False
         #print key, avgtype, file
         map, nest = _hp.GetBorisMap(file)
@@ -915,7 +915,7 @@ class Y1Dataset(Y1Processing):
         hist, bins = _np.histogram(mapval, bins=bins)
         cent = (bins[1:]+bins[:-1])/2.0
         return cent, hist, bins
-    
+
     def ApplyCut(self, key='objtype', val=1, cond='='):
         self.data = ApplyCut(self.data, key=key, val=val, cond=cond)
 
