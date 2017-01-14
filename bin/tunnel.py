@@ -51,7 +51,9 @@ if __name__ == "__main__":
     parser.add_argument("-hu", "--huser", help="Username on remote host you want to connect to", default=None)
     parser.add_argument("-gu", "--guser", help="Username on the gateway", default=None)
 
+    parser.add_argument("-ip", "--ip", help="IP address to use", default="localhost")
     parser.add_argument("-p", "--port", help="Local port to forward",  default=3000, type=int)
+
     parser.add_argument("-H", "--host", help="Remote host you want to connect to", required=True)
     parser.add_argument("-g", "--gateway", help="Gateway you want to connect through", required=True)
 
@@ -68,7 +70,7 @@ if __name__ == "__main__":
     ginfo = LookupHost(args.gateway, args.guser, config)
 
     cmd = ["ssh", "-f", "-N",
-           "-L", "localhost:{0}:{1}:22".format(args.port, hinfo['hostname']),
+           "-L", "{2}:{0}:{1}:22".format(args.port, hinfo['hostname'],args.ip),
            "{0}@{1}".format(ginfo['user'], ginfo['hostname'])]
 
     print ' '.join(cmd)
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     shortname = shortname.upper()
 
     out = open(args.tempfile, "w")
-    out.write('export {0}="-p {1} {2}@localhost"'.format(shortname, args.port, hinfo['user']))
+    out.write('export {0}="-p {1} {2}@{3}"'.format(shortname, args.port, hinfo['user'], args.ip))
     out.close()
 
     #print "To connect: ssh -p {0} {1}@localhost ".format(args.port, hinfo['user'])
