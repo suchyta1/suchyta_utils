@@ -22,22 +22,37 @@ def RunAndLog(cmd, logger):
         sys.exit(1)
 
 
+def AppendArgs(args, cmd):
+    for con in  args:
+        configs = con.split()
+        for config in configs:
+            cmd.append(config)
+
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-w", "--wget", help="URL to wget", default=None)
     parser.add_argument("-g", "--git", help="URL to git clone", default=None)
 
-    parser.add_argument("-c", "--config", help="Configure settings. Must be enclosed in quotes.", default=None)
+    parser.add_argument("-c", "--config", help='Configure install and settings. Must be given like --config or --config="--prefix=/path".', default=None, nargs="*")
+    parser.add_argument("-p", "--python", help='Python install and setting. Must be given like --python or --python="--prefix=/path".', default=None, nargs="*")
+
     parser.add_argument("-l", "--logdir", help="Directory where to write logfile", default="./")
     parser.add_argument("-k", "--keep", help="Keep source", action="store_true")
     args = parser.parse_args()
 
 
     if args.wget is not None:
-        fname = args.wget.split('/')[-1]
-        logfile = os.path.join(args.logdir, "{0}.log".format(fname))
-        logger = open(logfile, "w+")
+        name = args.wget
+    if args.git is not None:
+        name = args.git
+    fname = name.split('/')[-1]
+    logfile = os.path.join(args.logdir, "{0}.log".format(fname))
+    logger = open(logfile, "w+")
+
+    if args.wget is not None:
 
         cmd = ["wget", args.wget]
         RunAndLog(cmd, logger)
@@ -50,19 +65,31 @@ if __name__ == "__main__":
         RunAndLog(cmd, logger)
         os.remove(fname)
 
+    if args.git is not None:
+        cmd = ["git", "clone", args.git]
+        RunAndLog(cmd, logger)
+        codedir = fname.rstrip('.git')
+
 
     os.chdir(codedir)
-    cmd = ["./configure"]
-    if args.config is not None:
-        configs = args.config.split()
-        for config in configs:
-            cmd.append(config)
-    RunAndLog(cmd, logger)
 
-    cmd = ["make"]
-    RunAndLog(cmd, logger)
-    cmd = ["make", "install"]
-    RunAndLog(cmd, logger)
+    if args.python is not None:
+        cmd = ["python", "setup.py", "build"]
+        AppendArgs(args.python, cmd)
+        RunAndLog(cmd, logger)
+
+        cmd = ["python", "setup.py", "install"]
+        RunAndLog(cmd, logger)
+
+    if args.config is not None:
+        cmd = ["./configure"]
+        AppendArgs(args.config, cmd)
+        RunAndLog(cmd, logger)
+
+        cmd = ["make"]
+        RunAndLog(cmd, logger)
+        cmd = ["make", "install"]
+        RunAndLog(cmd, logger)
 
     os.chdir("../")
     if not args.keep:
