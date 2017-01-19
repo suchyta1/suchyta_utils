@@ -19,7 +19,7 @@ def RunAndLog(cmd, logger):
         history = logger.read()
         sys.stderr.write("Error!\nCommand history:\n\n{}".format(history))
         logger.close()
-        sys.exit(1)
+        sys.exit(retcode)
 
 
 def AppendArgs(args, cmd):
