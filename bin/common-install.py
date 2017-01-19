@@ -37,6 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--git", help="URL to git clone", default=None)
 
     parser.add_argument("-c", "--config", help='Configure install and settings. Must be given like --config or --config="--prefix=/path".', default=None, nargs="*")
+    parser.add_argument("-m", "--make", help='First make, before install. Must be given like --make="all test".', default=None, nargs="*")
     parser.add_argument("-p", "--python", help='Python install and setting. Must be given like --python or --python="--prefix=/path".', default=None, nargs="*")
 
     parser.add_argument("-l", "--logdir", help="Directory where to write logfile", default="./")
@@ -87,6 +88,8 @@ if __name__ == "__main__":
         RunAndLog(cmd, logger)
 
         cmd = ["make"]
+        if args.make is not None:
+            AppendArgs(args.make, cmd)
         RunAndLog(cmd, logger)
         cmd = ["make", "install"]
         RunAndLog(cmd, logger)
