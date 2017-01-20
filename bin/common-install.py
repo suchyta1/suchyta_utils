@@ -72,6 +72,8 @@ if __name__ == "__main__":
         codedir = fname.rstrip('.git')
 
 
+    if os.path.isfile(codedir):
+        codedir = "/".join(codedir.split("/")[:-1])
     os.chdir(codedir)
 
     if args.python is not None:
