@@ -37,6 +37,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-w", "--wget", help="URL to wget", default=None)
     parser.add_argument("-g", "--git", help="URL to git clone", default=None)
+    parser.add_argument("-cd", "--confdir", help="Subdirectory path to configure", default=None)
 
     parser.add_argument("-a", "--autogen", help='Call autogen script.', action="store_true")
     parser.add_argument("-c", "--config", help='Configure install and settings. Must be given like --config or --config="--prefix=/path".', default=None, nargs="*")
@@ -75,9 +76,14 @@ if __name__ == "__main__":
         codedir = fname.rstrip('.git')
 
 
+    codedir = os.path.realpath(codedir)
     if os.path.isfile(codedir):
         codedir = "/".join(codedir.split("/")[:-1])
-    os.chdir(codedir)
+
+    confdir = codedir
+    if args.confdir is not None:
+        confdir = os.path.join(codedir, args.confdir)
+    os.chdir(confdir)
 
     if args.autogen:
         cmd = ["/bin/bash", "-c", "./autogen.sh"]
@@ -104,7 +110,7 @@ if __name__ == "__main__":
         cmd = ["make", "install"]
         RunAndLog(cmd, logger)
 
-    os.chdir("../")
+    os.chdir(os.path.join(codedir, "../"))
     if not args.keep:
         shutil.rmtree(codedir)
 
