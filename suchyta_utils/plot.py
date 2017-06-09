@@ -48,7 +48,7 @@ except:
 
 
 
-def Setup():
+def Setup(stylefile=None, latex=False):
     """
     Setup some automatic styling of matplotlib plots. This started from
     a Supermongo-like style file from Matt Becker, that I probably tweaked to make things look nice to me.
@@ -68,9 +68,19 @@ def Setup():
 
     """
 
-    dir = _os.path.dirname(_os.path.realpath(__file__))
-    style = _ReadStyle(_os.path.join(dir,'custom-sytle.mpl'))
-    style = _SetStyle(style)
+    if stylefile is None:
+        dir = _os.path.dirname(_os.path.realpath(__file__))
+        stylefile = _os.path.join(dir, 'suchyta_utils.mplstyle')
+
+    if _mpl.__version__ > '1.4':
+        _mpl.style.use(stylefile)
+    else:
+        style = _ReadStyle()
+        style = _SetStyle(stylefile)
+
+    if latex:
+        _mpl.rcParams['text.usetex'] = True
+        _mpl.rcParams['text.latex.preamble'] = '\usepackage{txfonts}'
 
 
 def _ReadStyle(file):
@@ -96,8 +106,8 @@ def _ReadStyle(file):
 
 
 def _SetStyle(style):
-    for k,v in style.iteritems():
-        _mpl.rcParams[k]=v
+    for key in style.keys():
+        _mpl.rcParams[key] = style[key]
 
 
 def NTicks(ax, nxticks=None, nyticks=None):
