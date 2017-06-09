@@ -48,7 +48,7 @@ except:
 
 
 
-def Setup(stylefile=None, latex=False):
+def Setup(stylefile=None, latex=False, kwargs={}):
     """
     Setup some automatic styling of matplotlib plots. This started from
     a Supermongo-like style file from Matt Becker, that I probably tweaked to make things look nice to me.
@@ -75,12 +75,14 @@ def Setup(stylefile=None, latex=False):
     if _mpl.__version__ > '1.4':
         _mpl.style.use(stylefile)
     else:
-        style = _ReadStyle()
-        style = _SetStyle(stylefile)
+        style = _ReadStyle(stylefile)
+        _SetStyle(style)
 
     if latex:
         _mpl.rcParams['text.usetex'] = True
-        _mpl.rcParams['text.latex.preamble'] = '\usepackage{txfonts}'
+        #_mpl.rcParams['text.latex.preamble'] = '\usepackage{txfonts}'
+
+    _SetStyle(kwargs)
 
 
 def _ReadStyle(file):
